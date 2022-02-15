@@ -1,4 +1,4 @@
-<H2> smartcontracts of nepoleia platform:</h1>
+<H2> smartcontracts of nepoleia platform:</h2>
 
 * NepoleiaNFT
 * BuyBackTreasury
@@ -8,8 +8,9 @@
 * MultiSig
 
 ***
+<H2>Flowchart:</h2>
 
-protocol flowchart should be add to here
+![image flowchart](./Flowchart.jpg)
 
 ***
 
