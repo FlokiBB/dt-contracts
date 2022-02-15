@@ -28,3 +28,8 @@ const sampleContractInstance = await Greeter.attach(ContractAddress);
 
 await sampleContractInstance.changeStateMethod(some input);
 ```
+***
+for running solidity linter run the following command:
+```
+ npx solhint src/contracts/example.sol --fix 
+```
