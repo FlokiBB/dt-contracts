@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "hardhat/console.sol";
+import "hardhat/console.sol"
 
 contract NepoleiaNFT is ERC721A {
 
@@ -71,7 +71,7 @@ contract NepoleiaNFT is ERC721A {
 	// ***<Modifires>***
 
 	constructor() ERC721A("NepoleiaNFT", "NepoleiaNFT") {
-        console.log("Hi from NepoleiaNFT constructor");
+		console.log("NepoleiaNFT constructor");
 	}
 
 	function mint(uint256 quantity) external payable {

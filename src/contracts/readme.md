@@ -7,7 +7,10 @@ pip3 install -r requirements.txt
 
 source venv/bin/activate
 
-slither src/contracts/example.sol
+first use flatten to collect all file in one file 
+and clean the file (remove extra SPDX move error from source to here)  
+
+slither src/contracts/example_merged.sol
 
 myth a src/contracts/example.sol
 
