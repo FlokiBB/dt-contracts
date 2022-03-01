@@ -4,10 +4,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-
-import "hardhat/console.sol"
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "hardhat/console.sol";
 
 contract NepoleiaNFT is ERC721A {
+    using ECDSA for bytes32;
 
 	// ███╗░░██╗███████╗██████╗░░█████╗░██╗░░░░░███████╗██╗░█████╗░
 	// ████╗░██║██╔════╝██╔══██╗██╔══██╗██║░░░░░██╔════╝██║██╔══██╗
@@ -23,7 +24,7 @@ contract NepoleiaNFT is ERC721A {
 		Initialized,
 		WhitListMinting,
 		PublicMinting,
-		MinigEnded
+		MintingEnded
 	}
 	enum ArtRevealState {
 		NotRevealed,
@@ -32,6 +33,10 @@ contract NepoleiaNFT is ERC721A {
 	enum CardType {
 		Human,
 		God
+	}
+	enum TypeOFWhiteList {
+		Normal,
+		Royal
 	}
 
 	// ***<Addresses>***
@@ -66,6 +71,11 @@ contract NepoleiaNFT is ERC721A {
 	PlatformAddresses public platformAddresses;
 	ArtRevealState public revealStatus;
 	GameIPFS public gameIPFS;
+	uint16 public totalMinted;
+	uint16 public totalBurned;
+	uint public publicSalePrice;
+	ContractState public contractState;
+	uint public mintPrice ;
 
   
 	// ***<Modifires>***
@@ -79,6 +89,26 @@ contract NepoleiaNFT is ERC721A {
 		_safeMint(msg.sender, quantity);
 	}
 
+
+	function whitelistMinting(address addr, uint64 maxQuantity, uint64 quantity, TypeOFWhiteList typeOFWhiteList,bytes calldata sig) external payable {
+		require(contractState == ContractState.WhitListMinting, "WhitListMinting state not active");
+		require(_whiteListStatus[addr] != true, "whiteliste is used");
+		require(isWhitelisted(addr,maxQuantity,typeOFWhiteList,sig), "signature is not valid");
+		uint64 _aux = _getAux(addr);
+		require(_aux + quantity <= maxQuantity, "quantity is not allowed");
+		if (typeOFWhiteList == TypeOFWhiteList.Royal) {
+			_safeMint(addr, quantity);
+			_setAux(addr, _aux + quantity);
+		} else {
+			require(quauntity * mintPrice ether<= msg.value ether, "quantity is not allowed");
+			_safeMint(addr, quantity);
+			_setAux(addr, _aux + quantity);
+		}
+	}
+
+	function isWhitelisted(address account, uint8 maxQuantity, TypeOFWhiteList typeOFWhiteList, bytes calldata sig) internal view returns (bool) {
+    	return ECDSA.recover(keccak256(abi.encodePacked(account, maxQuantity, typeOFWhiteList)).toEthSignedMessageHash(), sig) == defiTitan;
+  	}
 	function tokenURI(uint256 tokenId) public view override returns (string memory) {
 		if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
