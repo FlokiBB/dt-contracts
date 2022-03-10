@@ -13,6 +13,8 @@ import 'hardhat/console.sol';
 // TODO: add proper Event to functions
 // TODO: set getter and setter for variables if needed
 // TODO: implement maxSupply in contract 
+// ToDo: attention to eip165
+// TODO: call _setRoyalties in initializer 
 contract NepoleiaNFT is ERC721A {
     using ECDSA for bytes32;
 
@@ -50,6 +52,12 @@ contract NepoleiaNFT is ERC721A {
         address gameTreasury;
         address buyBackTreasury;
         address fundDistributor;
+    }
+
+    // Eip2981
+    struct RoyaltyInfo {
+        address recipient;
+        uint8 percent;
     }
 
     struct GameIPFS {
@@ -92,6 +100,8 @@ contract NepoleiaNFT is ERC721A {
     uint256 public auctionDuration;
 	uint256 public auctionStartTime;
     uint256 public upgradeRequestFee;
+    RoyaltyInfo private _royalties;
+
 
     // ***<Modifires>***
 
@@ -282,6 +292,22 @@ contract NepoleiaNFT is ERC721A {
 
     }
 
+    /// @dev Sets token royalties
+    /// @param recipient recipient of the royalties
+    /// @param value percentage (using 2 decimals - 10000 = 100, 0 = 0)
+    function _setRoyalties(address recipient, uint8 percent) internal {
+        _royalties = RoyaltyInfo(recipient, uint8(percent));
+    }
+
+    function royaltyInfo(uint256, uint256 value)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        RoyaltyInfo memory royalties = _royalties;
+        receiver = royalties.recipient;
+        royaltyAmount = (value * royalties.percent) / 100;
+    }
     // ███████╗██╗░░░░░░█████╗░██╗░░██╗██╗  ██████╗░██████╗░
     // ██╔════╝██║░░░░░██╔══██╗██║░██╔╝██║  ██╔══██╗██╔══██╗
     // █████╗░░██║░░░░░██║░░██║█████═╝░██║  ██████╦╝██████╦╝
