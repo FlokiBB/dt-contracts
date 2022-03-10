@@ -7,10 +7,12 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import 'hardhat/console.sol';
 
-// TODO: good requre message
-// TODO: move row requre in head of an function to proper modifier
+// TODO: good require message
+// TODO: move row require in head of an function to proper modifier
 // TODO: proper name for functions and variables
-// TODO: add prpoper Event to functions
+// TODO: add proper Event to functions
+// TODO: set getter and setter for variables if needed
+// TODO: implement maxSupply in contract 
 contract NepoleiaNFT is ERC721A {
     using ECDSA for bytes32;
 
@@ -76,6 +78,7 @@ contract NepoleiaNFT is ERC721A {
     mapping(uint16 => bool) public upgradedTokens;
     mapping(uint16 => bool) public _isGod;
     mapping(uint8 => GodAuction) public godAuctions;
+    mapping(uint => bool) public upgradeRequestFeeIsPaid;
 	
 
     // ***<State Variables>***
@@ -88,6 +91,7 @@ contract NepoleiaNFT is ERC721A {
     uint256 public maxMintPerAddress;
     uint256 public auctionDuration;
 	uint256 public auctionStartTime;
+    uint256 public upgradeRequestFee;
 
     // ***<Modifires>***
 
@@ -95,12 +99,12 @@ contract NepoleiaNFT is ERC721A {
         console.log('NepoleiaNFT constructor');
     }
 
-    // initializer function should run as first function after constructure
+    // initializer function should run as first function after constructor
     // require onlyOwner
     function initializer() external {
         // mint gods in here and setup auctions for them
-        // intial date in here
-        // require not in the whitlist minting
+        // initial date in here
+        // require not in the whitelist minting
         _setupGodAuction(10);
     }
 
@@ -113,14 +117,14 @@ contract NepoleiaNFT is ERC721A {
 		require(godAuctions[day].expiresAt >= block.timestamp, "not allowed to call");
 		uint8 tokenId = day - 1;
 		TokenOwnership memory Ownership = ownershipOf(tokenId);
-		require(Ownership.addr == defiTitan, 'the toekn is sailed in auction');
+		require(Ownership.addr == defiTitan, 'the token is sailed in auction');
 
 		GodAuction auction = godAuctions[day];
 		uint256 currentPrice = _getAuctionPrice(auction);
 
-		require(currentPrice >= auction.endPrice, 'auction has endede because it recive to base price');
+		require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
 		require(currentPrice <= msg.value);
-		// TODO: transfer fund to defi titan in here safely (whatch out reenterncy)
+		// TODO: transfer fund to defi titan in here safely (watch out reentrancy)
 
 		(bool sent, bytes memory data) = defiTitan.call{value: msg.value}("");
         require(sent, "Failed to send Ether");
@@ -143,14 +147,13 @@ contract NepoleiaNFT is ERC721A {
         return godAuctions[day].startPrice - discount;
 	}
 
-
     function _setupGodAuction(uint256 numberOfGod, GodAuctionConfig[] configs) private {
 		require(configs.length == numberOfGod, "config length must be equal to number of god");
         // setup auction for god
         _safeMint(defiTitan, numberOfGod);
-        // aprove this contract for transfering this tokens in here
+        // approve this contract for transferring this tokens in here
 
-        require(_totalMinted() == numberOfGod, 'bad initialzation of contract');
+        require(_totalMinted() == numberOfGod, 'bad initialization of contract');
 
         for (uint8 index = 0; index < numberOfGod; index++) {
             GodAuction god = GodAuction(
@@ -180,7 +183,7 @@ contract NepoleiaNFT is ERC721A {
         bytes calldata sig
     ) external payable {
         require(contractState == ContractState.WhitListMinting, 'WhitListMinting state not active');
-        require(_whiteListStatus[addr] != true, 'whiteliste is used');
+        require(_whiteListStatus[addr] != true, 'whitelisted is used');
         require(isWhitelisted(addr, maxQuantity, typeOFWhiteList, sig), 'signature is not valid');
         uint64 _aux = _getAux(addr);
         require(_aux + quantity <= maxQuantity, 'quantity is not allowed');
@@ -211,7 +214,7 @@ contract NepoleiaNFT is ERC721A {
         require(contractState == ContractState.PublicMinting, 'PublicMinting state not active');
         require(quantity <= maxMintPerAddress, 'quantity is not allowed');
         require(_numberMinted(msg.sender) <= maxMintPerAddress, 'quantity is not allowed');
-        require(quantity * mintPrice <= msg.value, 'not enought ether');
+        require(quantity * mintPrice <= msg.value, 'not enoughs ether');
         _safeMint(msg.sender, quantity);
     }
 
@@ -243,6 +246,40 @@ contract NepoleiaNFT is ERC721A {
         require(len > 0, 'CID is empty');
         require(CID[len - 1] == '/', 'CID is not valid');
         gameIPFS.revealedHumanIPFS = ipfsCid;
+    }
+
+    function upgradeTokenRequestFee(uint256 tokenId) external payable {
+        require(_exists(tokenId), 'token does not exist');
+        TokenOwnership memory Ownership = ownershipOf(tokenId);
+        require(msg.sender == Ownership.addr, 'only owner of token can upgrade token');
+        require(upgradeRequestFee <= msg.sender , 'not enoughs ether');
+
+        upgradeRequestFeeIsPaid[tokenId] = true;
+        address payable _addr = platform;
+        (bool sent, bytes memory data) = _addr.call{value: msg.value}("");
+        require(sent, "Failed to send Ether");
+        // TODO: emit a special event in here
+    }   
+
+    function upgradeToken(string memory ipfsCid, uint tokenId) external {
+        require(msg.sender == platform, 'only platform can upgrade token');
+        uint256 len = CID.length;
+        require(len > 0, 'CID is empty');
+        require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
+        upgradeRequestFeeIsPaid = false;
+        upgradedTokensIPFS[tokenId] = ipfsCid;
+        upgradedTokens[tokenId] = true;
+        // TODO: emit proper event here
+    }
+
+    function buyBackToken(uint tokenId) external {
+        require(_exists(tokenId), 'token does not exist');
+        TokenOwnership memory Ownership = ownershipOf(tokenId);
+        require(msg.sender == Ownership.addr, 'only owner of token can buy back token');
+         _burn(tokenId);
+         // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender
+         // TODO: emit proper event here
+
     }
 
     // ███████╗██╗░░░░░░█████╗░██╗░░██╗██╗  ██████╗░██████╗░
