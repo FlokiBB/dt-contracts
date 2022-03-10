@@ -12,9 +12,9 @@ import 'hardhat/console.sol';
 // TODO: proper name for functions and variables
 // TODO: add proper Event to functions
 // TODO: set getter and setter for variables if needed
-// TODO: implement maxSupply in contract 
+// TODO: implement maxSupply in contract
 // ToDo: attention to eip165
-// TODO: call _setRoyalties in initializer 
+// TODO: call _setRoyalties in initializer
 contract NepoleiaNFT is ERC721A {
     using ECDSA for bytes32;
 
@@ -66,18 +66,18 @@ contract NepoleiaNFT is ERC721A {
         string revealedHumanIPFS;
     }
 
-	struct GodAuctionConfig {
+    struct GodAuctionConfig {
         uint256 startPrice;
         uint256 endPrice;
-		uint256 discountRate;
-	}
+        uint256 discountRate;
+    }
     struct GodAuction {
-		uint8 tokenID;
+        uint8 tokenID;
         uint256 startTime;
         uint256 expiresAt;
-		uint256 startPrice;
+        uint256 startPrice;
         uint256 endPrice;
-		uint256 discountRate;
+        uint256 discountRate;
     }
 
     // ***<Mappings>***
@@ -86,8 +86,7 @@ contract NepoleiaNFT is ERC721A {
     mapping(uint16 => bool) public upgradedTokens;
     mapping(uint16 => bool) public _isGod;
     mapping(uint8 => GodAuction) public godAuctions;
-    mapping(uint => bool) public upgradeRequestFeeIsPaid;
-	
+    mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
 
     // ***<State Variables>***
     PlatformAddresses public platformAddresses;
@@ -98,10 +97,9 @@ contract NepoleiaNFT is ERC721A {
     uint256 public mintPrice;
     uint256 public maxMintPerAddress;
     uint256 public auctionDuration;
-	uint256 public auctionStartTime;
+    uint256 public auctionStartTime;
     uint256 public upgradeRequestFee;
     RoyaltyInfo private _royalties;
-
 
     // ***<Modifires>***
 
@@ -118,48 +116,48 @@ contract NepoleiaNFT is ERC721A {
         // _setupGodAuction(10);
     }
 
-    // todo: add statuse to god auction struct and handle require with it 
+    // todo: add statuse to god auction struct and handle require with it
     function buyGod(uint8 day) external payable {
         // buy god
-		// require contract in the state of active auction
-		require(1 <= day && day <= 10, "day must be between 1 and 10");
-		require(contractState == ContractState.Initialized, "not allowed to call");
-		require(godAuctions[day].startTime <= block.timestamp, "not allowed to call");
-		require(godAuctions[day].expiresAt >= block.timestamp, "not allowed to call");
-		uint8 tokenId = day - 1;
-		TokenOwnership memory Ownership = ownershipOf(tokenId);
-		require(Ownership.addr == defiTitan, 'the token is sailed in auction');
+        // require contract in the state of active auction
+        require(1 <= day && day <= 10, 'day must be between 1 and 10');
+        require(contractState == ContractState.Initialized, 'not allowed to call');
+        require(godAuctions[day].startTime <= block.timestamp, 'not allowed to call');
+        require(godAuctions[day].expiresAt >= block.timestamp, 'not allowed to call');
+        uint8 tokenId = day - 1;
+        TokenOwnership memory Ownership = ownershipOf(tokenId);
+        require(Ownership.addr == defiTitan, 'the token is sailed in auction');
 
-		GodAuction memory auction = godAuctions[day];
-		uint256 currentPrice = _getAuctionPrice(auction);
+        GodAuction memory auction = godAuctions[day];
+        uint256 currentPrice = _getAuctionPrice(auction);
 
-		require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
-		require(currentPrice <= msg.value);
-		// TODO: transfer fund to defi titan in here safely (watch out reentrancy)
+        require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
+        require(currentPrice <= msg.value);
+        // TODO: transfer fund to defi titan in here safely (watch out reentrancy)
 
-		(bool sent,) = defiTitan.call{value: msg.value}("");
-        require(sent, "Failed to send Ether");
+        (bool sent, ) = defiTitan.call{value: msg.value}('');
+        require(sent, 'Failed to send Ether');
 
-		transferFrom(defiTitan, msg.sender, tokenId);
-
+        transferFrom(defiTitan, msg.sender, tokenId);
     }
 
     function _getAuctionPrice(GodAuction memory auction) internal view returns (uint256) {
         // get auction price
-		uint timeElapsed = block.timestamp - auction.startTime;
-        uint discount = auction.discountRate * timeElapsed;
+        uint256 timeElapsed = block.timestamp - auction.startTime;
+        uint256 discount = auction.discountRate * timeElapsed;
         return auction.startPrice - discount;
     }
-	function getGodAuctionPrice(uint8 day) external view returns (uint256) {
-		require(1 <= day && day <= 10, "day must be between 1 and 10");
-		require(contractState == ContractState.Initialized, "not allowed to call");
-		uint timeElapsed = block.timestamp - godAuctions[day].startTime;
-        uint discount = godAuctions[day].discountRate * timeElapsed;
+
+    function getGodAuctionPrice(uint8 day) external view returns (uint256) {
+        require(1 <= day && day <= 10, 'day must be between 1 and 10');
+        require(contractState == ContractState.Initialized, 'not allowed to call');
+        uint256 timeElapsed = block.timestamp - godAuctions[day].startTime;
+        uint256 discount = godAuctions[day].discountRate * timeElapsed;
         return godAuctions[day].startPrice - discount;
-	}
+    }
 
     function _setupGodAuction(uint256 numberOfGod, GodAuctionConfig[] memory configs) private {
-		require(configs.length == numberOfGod, "config length must be equal to number of god");
+        require(configs.length == numberOfGod, 'config length must be equal to number of god');
         // setup auction for god
         _safeMint(defiTitan, numberOfGod);
         // approve this contract for transferring this tokens in here
@@ -168,23 +166,23 @@ contract NepoleiaNFT is ERC721A {
 
         for (uint8 index = 0; index < numberOfGod; index++) {
             GodAuction memory god = GodAuction(
-				index,
+                index,
                 auctionStartTime + auctionDuration * index,
                 auctionStartTime + auctionDuration * (index + 1),
-				configs[index].startPrice,
-				configs[index].endPrice,
-				configs[index].discountRate
+                configs[index].startPrice,
+                configs[index].endPrice,
+                configs[index].discountRate
             );
-            godAuctions[index+1] = god;
-			_defiTitanAuctionApproval(index);
+            godAuctions[index + 1] = god;
+            _defiTitanAuctionApproval(index);
         }
     }
 
-	function _defiTitanAuctionApproval(uint8 tokenId) private {
-		TokenOwnership memory ownership = ownershipOf(tokenId);
-		require(ownership.addr == defiTitan);
-		_approve(address(this), tokenId, defiTitan);
-	}
+    function _defiTitanAuctionApproval(uint8 tokenId) private {
+        TokenOwnership memory ownership = ownershipOf(tokenId);
+        require(ownership.addr == defiTitan);
+        _approve(address(this), tokenId, defiTitan);
+    }
 
     function whitelistMinting(
         address addr,
@@ -262,15 +260,15 @@ contract NepoleiaNFT is ERC721A {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory ownership = ownershipOf(tokenId);
         require(msg.sender == ownership.addr, 'only owner of token can upgrade token');
-        require(upgradeRequestFee <= msg.value , 'not enoughs ether');
+        require(upgradeRequestFee <= msg.value, 'not enoughs ether');
 
         upgradeRequestFeeIsPaid[tokenId] = true;
 
-        (bool sent,) = payable(platform).call{value: msg.value}("");
+        (bool sent, ) = payable(platform).call{value: msg.value}('');
 
-        require(sent, "Failed to send Ether");
+        require(sent, 'Failed to send Ether');
         // TODO: emit a special event in here
-    }   
+    }
 
     function upgradeToken(string memory ipfsCid, uint16 tokenId) external {
         require(msg.sender == platform, 'only platform can upgrade token');
@@ -283,14 +281,13 @@ contract NepoleiaNFT is ERC721A {
         // TODO: emit proper event here
     }
 
-    function buyBackToken(uint tokenId) external {
+    function buyBackToken(uint256 tokenId) external {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory Ownership = ownershipOf(tokenId);
         require(msg.sender == Ownership.addr, 'only owner of token can buy back token');
-         _burn(tokenId);
-         // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender
-         // TODO: emit proper event here
-
+        _burn(tokenId);
+        // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender
+        // TODO: emit proper event here
     }
 
     /// @dev Sets token royalties
@@ -300,11 +297,7 @@ contract NepoleiaNFT is ERC721A {
         _royalties = RoyaltyInfo(recipient, uint8(value));
     }
 
-    function royaltyInfo(uint256, uint256 value)
-        external
-        view
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(uint256, uint256 value) external view returns (address receiver, uint256 royaltyAmount) {
         RoyaltyInfo memory royalties = _royalties;
         receiver = royalties.recipient;
         royaltyAmount = (value * royalties.percent) / 100;
