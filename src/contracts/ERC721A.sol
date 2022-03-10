@@ -531,11 +531,12 @@ contract ERC721A is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Emits a {Approval} event.
      */
+     // i change this to internal from private scine i need to call this in _defiTitanAuctionApproval
     function _approve(
         address to,
         uint256 tokenId,
         address owner
-    ) private {
+    ) internal {
         _tokenApprovals[tokenId] = to;
         emit Approval(owner, to, tokenId);
     }

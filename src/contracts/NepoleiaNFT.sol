@@ -2,11 +2,15 @@
 pragma solidity ^0.8.4;
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import 'erc721a/contracts/ERC721A.sol';
+import './ERC721A.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import 'hardhat/console.sol';
 
+// TODO: good requre message
+// TODO: move row requre in head of an function to proper modifier
+// TODO: proper name for functions and variables
+// TODO: add prpoper Event to functions
 contract NepoleiaNFT is ERC721A {
     using ECDSA for bytes32;
 
@@ -52,11 +56,18 @@ contract NepoleiaNFT is ERC721A {
         string revealedHumanIPFS;
     }
 
-    struct GodAuction {
+	struct GodAuctionConfig {
         uint256 startPrice;
         uint256 endPrice;
+		uint256 godAuctionDiscountRate;
+	}
+    struct GodAuction {
+		uint8 tokenID;
         uint256 startTime;
         uint256 expiresAt;
+		uint256 startPrice;
+        uint256 endPrice;
+		uint256 discountRate;
     }
 
     // ***<Mappings>***
@@ -64,7 +75,8 @@ contract NepoleiaNFT is ERC721A {
     mapping(uint16 => string) private upgradedTokensIPFS;
     mapping(uint16 => bool) public upgradedTokens;
     mapping(uint16 => bool) public _isGod;
-    mapping(uint256 => GodAuction) public godAuctions;
+    mapping(uint8 => GodAuction) public godAuctions;
+	
 
     // ***<State Variables>***
     PlatformAddresses public platformAddresses;
@@ -74,10 +86,8 @@ contract NepoleiaNFT is ERC721A {
     ContractState public contractState;
     uint256 public mintPrice;
     uint256 public maxMintPerAddress;
-    uint256 public godAuctionDiscountRate;
-    uint256 public auctionStartPrice;
-    uint256 public auctionEndPrice;
     uint256 public auctionDuration;
+	uint256 public auctionStartTime;
 
     // ***<Modifires>***
 
@@ -94,30 +104,73 @@ contract NepoleiaNFT is ERC721A {
         _setupGodAuction(10);
     }
 
-    function buyGod(uint16 _godID) external payable {
+    function buyGod(uint8 day) external payable {
         // buy god
+		// require contract in the state of active auction
+		require(1 <= day && day <= 10, "day must be between 1 and 10");
+		require(contractState == ContractState.Initialized, "not allowed to call");
+		require(godAuctions[day].startTime <= block.timestamp, "not allowed to call");
+		require(godAuctions[day].expiresAt >= block.timestamp, "not allowed to call");
+		uint8 tokenId = day - 1;
+		TokenOwnership memory Ownership = ownershipOf(tokenId);
+		require(Ownership.addr == defiTitan, 'the toekn is sailed in auction');
+
+		GodAuction auction = godAuctions[day];
+		uint256 currentPrice = _getAuctionPrice(auction);
+
+		require(currentPrice >= auction.endPrice, 'auction has endede because it recive to base price');
+		require(currentPrice <= msg.value);
+		// TODO: transfer fund to defi titan in here safely (whatch out reenterncy)
+
+		(bool sent, bytes memory data) = defiTitan.call{value: msg.value}("");
+        require(sent, "Failed to send Ether");
+
+		transferFrom(defiTitan, msg.sender, tokenId)
+
     }
 
-    function getAuctionPrice(uint16 _godID) external view returns (uint256) {
+    function _getAuctionPrice(GodAuction auction) internal pure returns (uint256) {
         // get auction price
+		uint timeElapsed = block.timestamp - auction.startTime;
+        uint discount = auction.discountRate * timeElapsed;
+        return auction.startPrice - discount;
     }
+	function getGodAuctionPrice(uint8 day) external view returns (uint256) {
+		require(1 <= day && day <= 10, "day must be between 1 and 10");
+		require(contractState == ContractState.Initialized, "not allowed to call");
+		uint timeElapsed = block.timestamp - godAuctions[day].startTime;
+        uint discount = godAuctions[day].discountRate * timeElapsed;
+        return godAuctions[day].startPrice - discount;
+	}
 
-    function _setupGodAuction(uint256 numberOfGod) private {
+
+    function _setupGodAuction(uint256 numberOfGod, GodAuctionConfig[] configs) private {
+		require(configs.length == numberOfGod, "config length must be equal to number of god");
         // setup auction for god
         _safeMint(defiTitan, numberOfGod);
         // aprove this contract for transfering this tokens in here
+
         require(_totalMinted() == numberOfGod, 'bad initialzation of contract');
 
         for (uint8 index = 0; index < numberOfGod; index++) {
             GodAuction god = GodAuction(
-                auctionStartPrice,
-                auctionEndPrice,
-                block.timestamp + auctionDuration * index,
-                block.timestamp + auctionDuration * (index + 1)
+				index
+                auctionStartTime + auctionDuration * index,
+                auctionStartTime + auctionDuration * (index + 1),
+				configs[index].startPrice,
+				configs[index].endPrice,
+				configs[index].discountRate
             );
-            godAuctions[index] = god;
+            godAuctions[index+1] = god;
+			_defiTitanAuctionApproval(index)
         }
     }
+
+	function _defiTitanAuctionApproval(uint8 tokenId) private {
+		TokenOwnership memory Ownership = ownershipOf(tokenId);
+		require(Ownership.addr == );
+		_approve(this, tokenId, defiTitan)
+	}
 
     function whitelistMinting(
         address addr,
