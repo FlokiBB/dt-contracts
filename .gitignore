@@ -5,8 +5,8 @@ coverage.json
 typechain
 
 #Hardhat files
-build/cache
-build/artifacts
+cache
+artifacts
 
 #compiled js from typescript
 hardhat.config.js

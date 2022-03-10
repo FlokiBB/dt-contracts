@@ -47,10 +47,10 @@ const config: HardhatUserConfig = {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   paths: {
-    cache: './build/cache',
+    cache: './cache',
     sources: './src/contracts',
     tests: './src/test',
-    artifacts: './build/artifacts',
+    artifacts: './artifacts',
   },
 }
 

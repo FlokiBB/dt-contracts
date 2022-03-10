@@ -135,10 +135,9 @@ contract NepoleiaNFT is ERC721A {
         require(currentPrice <= msg.value, 'not enough money');
         // TODO: transfer fund to defi titan in here safely (watch out reentrancy)
 
+        transferFrom(defiTitan, msg.sender, tokenId);
         (bool sent, ) = defiTitan.call{value: msg.value}('');
         require(sent, 'Failed to send Ether');
-
-        transferFrom(defiTitan, msg.sender, tokenId);
     }
 
     function _getAuctionPrice(GodAuction memory auction) internal view returns (uint256) {
