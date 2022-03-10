@@ -5,6 +5,7 @@
     "compiler-version": ["error", "^0.8.4"],
     "func-visibility": ["warn", { "ignoreConstructors": true }],
     "quotes": [2, "single", { "avoidEscape": true }],
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+    "reason-string": ["warn",{"maxLength":64}]
   }
 }
