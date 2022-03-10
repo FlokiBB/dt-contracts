@@ -252,9 +252,9 @@ contract NepoleiaNFT is ERC721A {
         // use only owner
         require(msg.sender == owner, 'only owner can reveal art');
         require(revealStatus == ArtRevealState.NotRevealed, 'art is already revealed');
-        uint256 len = CID.length;
+        uint256 len = ipfsCid.length;
         require(len > 0, 'CID is empty');
-        require(CID[len - 1] == '/', 'CID is not valid');
+        require(ipfsCid[len - 1] == '/', 'CID is not valid');
         gameIPFS.revealedHumanIPFS = ipfsCid;
     }
 
@@ -273,7 +273,7 @@ contract NepoleiaNFT is ERC721A {
 
     function upgradeToken(string memory ipfsCid, uint tokenId) external {
         require(msg.sender == platform, 'only platform can upgrade token');
-        uint256 len = CID.length;
+        uint256 len = ipfsCid.length;
         require(len > 0, 'CID is empty');
         require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
         upgradeRequestFeeIsPaid = false;
