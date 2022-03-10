@@ -125,14 +125,14 @@ contract NepoleiaNFT is ERC721A {
         require(godAuctions[day].startTime <= block.timestamp, 'not allowed to call');
         require(godAuctions[day].expiresAt >= block.timestamp, 'not allowed to call');
         uint8 tokenId = day - 1;
-        TokenOwnership memory Ownership = ownershipOf(tokenId);
-        require(Ownership.addr == defiTitan, 'the token is sailed in auction');
+        TokenOwnership memory ownership = ownershipOf(tokenId);
+        require(ownership.addr == defiTitan, 'the token is sailed in auction');
 
         GodAuction memory auction = godAuctions[day];
         uint256 currentPrice = _getAuctionPrice(auction);
 
         require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
-        require(currentPrice <= msg.value);
+        require(currentPrice <= msg.value, 'not enough money');
         // TODO: transfer fund to defi titan in here safely (watch out reentrancy)
 
         (bool sent, ) = defiTitan.call{value: msg.value}('');
@@ -180,7 +180,7 @@ contract NepoleiaNFT is ERC721A {
 
     function _defiTitanAuctionApproval(uint8 tokenId) private {
         TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(ownership.addr == defiTitan);
+        require(ownership.addr == defiTitan, 'bad call');
         _approve(address(this), tokenId, defiTitan);
     }
 
@@ -282,9 +282,10 @@ contract NepoleiaNFT is ERC721A {
     }
 
     function buyBackToken(uint256 tokenId) external {
+        require(tokenId > 10 , 'god are not allowed to buy back');
         require(_exists(tokenId), 'token does not exist');
-        TokenOwnership memory Ownership = ownershipOf(tokenId);
-        require(msg.sender == Ownership.addr, 'only owner of token can buy back token');
+        TokenOwnership memory ownership = ownershipOf(tokenId);
+        require(msg.sender == ownership.addr, 'only owner of token can buy back token');
         _burn(tokenId);
         // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender
         // TODO: emit proper event here
