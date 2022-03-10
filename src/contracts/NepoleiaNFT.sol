@@ -30,10 +30,6 @@ contract NepoleiaNFT is ERC721A {
 		NotRevealed,
 		Revealed
 	}
-	enum CardType {
-		Human,
-		God
-	}
 	enum TypeOFWhiteList {
 		Normal,
 		Royal
@@ -51,10 +47,6 @@ contract NepoleiaNFT is ERC721A {
 		address fundDistributor;
 	}
   
-	struct TokenData {
-		CardType mod;
-		bool upgraded;
-	}
 
 	struct GameIPFS {
 		string godIPFS;
@@ -62,21 +54,32 @@ contract NepoleiaNFT is ERC721A {
 		string revealedHumanIPFS;
 	}
 
+	struct GodAuction{
+		uint256 startPrice;
+		uint256 endPrice;
+		uint256 startTime;
+		uint256 expiresAt;
+	}
+
 	// ***<Mappings>***
 	mapping(address => bool) private _whiteListStatus;
-	mapping(uint16 => TokenData) private _tokenData;
 	mapping(uint16 => string) private upgradedTokensIPFS;
+	mapping(uint16 => bool) public upgradedTokens;
+	mapping(uint16 => bool) public _isGod;
+	mapping(uint => GodAuction) public godAuctions;
 
 	// ***<State Variables>***
 	PlatformAddresses public platformAddresses;
 	ArtRevealState public revealStatus;
 	GameIPFS public gameIPFS;
-	uint16 public totalMinted;
-	uint16 public totalBurned;
 	uint public publicSalePrice;
 	ContractState public contractState;
-	uint public mintPrice ;
-
+	uint public mintPrice;
+	uint public maxMintPerAddress;
+	uint public godAuctionDiscountRate;
+	uint public auctionStartPrice;
+	uint public auctionEndPrice;
+	uint public auctionDuration;
   
 	// ***<Modifires>***
 
@@ -84,11 +87,38 @@ contract NepoleiaNFT is ERC721A {
 		console.log("NepoleiaNFT constructor");
 	}
 
-	function mint(uint256 quantity) external payable {
-		// _safeMint's second argument now takes in a quantity, not a tokenId.
-		_safeMint(msg.sender, quantity);
+	// initializer function should run as first function after constructure 
+	// require onlyOwner
+	function initializer() external{
+		// mint gods in here and setup auctions for them
+		// intial date in here 
+		// require not in the whitlist minting
+		_setupGodAuction(10);
 	}
 
+	function buyGod(uint16 _godID) external payable{
+		// buy god
+	}
+	function getAuctionPrice(uint16 _godID) external view returns (uint){
+		// get auction price
+	}
+	function _setupGodAuction(uint numberOfGod ) private {
+		// setup auction for god
+		_safeMint(defiTitan, numberOfGod);
+		// aprove this contract for transfering this tokens in here
+		require(_totalMinted() == numberOfGod, "bad initialzation of contract");
+
+		for (uint8 index = 0; index < numberOfGod; index++) {
+			GodAuction god = GodAuction(
+				auctionStartPrice,
+				auctionEndPrice,
+				block.timestamp + auctionDuration * index,
+				block.timestamp + auctionDuration * (index + 1)
+			);
+			godAuctions[index] = god;
+		}
+		
+	}
 
 	function whitelistMinting(address addr, uint64 maxQuantity, uint64 quantity, TypeOFWhiteList typeOFWhiteList,bytes calldata sig) external payable {
 		require(contractState == ContractState.WhitListMinting, "WhitListMinting state not active");
@@ -99,8 +129,9 @@ contract NepoleiaNFT is ERC721A {
 		if (typeOFWhiteList == TypeOFWhiteList.Royal) {
 			_safeMint(addr, quantity);
 			_setAux(addr, _aux + quantity);
+
 		} else {
-			require(quauntity * mintPrice ether<= msg.value ether, "quantity is not allowed");
+			require(quantity * mintPrice <= msg.value, "quantity is not allowed");
 			_safeMint(addr, quantity);
 			_setAux(addr, _aux + quantity);
 		}
@@ -109,16 +140,24 @@ contract NepoleiaNFT is ERC721A {
 	function isWhitelisted(address account, uint8 maxQuantity, TypeOFWhiteList typeOFWhiteList, bytes calldata sig) internal view returns (bool) {
     	return ECDSA.recover(keccak256(abi.encodePacked(account, maxQuantity, typeOFWhiteList)).toEthSignedMessageHash(), sig) == defiTitan;
   	}
+
+	function publicMint(uint256 quantity) external payable {
+		require(contractState == ContractState.PublicMinting, "PublicMinting state not active");
+		require(quantity <= maxMintPerAddress, "quantity is not allowed");
+		require(_numberMinted(msg.sender) <= maxMintPerAddress , "quantity is not allowed");
+		require(quantity * mintPrice <= msg.value, "not enought ether");
+		_safeMint(msg.sender, quantity);
+	}
+
 	function tokenURI(uint256 tokenId) public view override returns (string memory) {
 		if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
 		string memory returnURI = "";
-		uint16 id = uint16(tokenId);
-		TokenData memory tokenData =  _tokenData[id];
-
-		if (tokenData.upgraded == true ){
+		uint16 id = uint16(tokenId); 
+		// TODO: set it when minting
+		if (upgradedTokens[id]){
 			returnURI = string(abi.encodePacked(upgradedTokensIPFS[id]));
-		} else if (tokenData.mod == CardType.God) {
+		} else if (_isGod[id]) {
 			returnURI = string(abi.encodePacked(gameIPFS.godIPFS, Strings.toString(id))) ;
 		} else {
 			string memory humanIPFS = revealStatus == ArtRevealState.NotRevealed ? gameIPFS.notRevealedHumanIPFS : gameIPFS.revealedHumanIPFS;
@@ -128,12 +167,15 @@ contract NepoleiaNFT is ERC721A {
 		return returnURI;
 	}
 
-	// ***<State Toggle Functions>***
-
-	// ***<Private Functions>***
-
-	// ***<Getter And Setter Functions>***
-
+	function revealArt(string memory ipfsCid) external {
+		// use only owner
+		require(msg.sender == owner, "only owner can reveal art");
+		require(revealStatus == ArtRevealState.NotRevealed, "art is already revealed");
+		uint len = CID.length;
+		require(len > 0, "CID is empty");
+		require(CID[len - 1] == "/", "CID is not valid");
+		gameIPFS.revealedHumanIPFS = ipfsCid;
+	}
 
 	// ███████╗██╗░░░░░░█████╗░██╗░░██╗██╗  ██████╗░██████╗░
 	// ██╔════╝██║░░░░░██╔══██╗██║░██╔╝██║  ██╔══██╗██╔══██╗
