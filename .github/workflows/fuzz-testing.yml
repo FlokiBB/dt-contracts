@@ -1,4 +1,4 @@
-name: Fuzz Testing
+name: Security Testing With Slither
 
 on:
   push:
@@ -7,24 +7,14 @@ on:
   pull_request:
 
 jobs:
-  echidna:
-    name: Echidna
+  slither:
+    name: Slither
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         testName:
-          - TickBitmapEchidnaTest
-          - TickMathEchidnaTest
-          - SqrtPriceMathEchidnaTest
-          - SwapMathEchidnaTest
-          - TickEchidnaTest
-          - TickOverflowSafetyEchidnaTest
-          - OracleEchidnaTest
-          - BitMathEchidnaTest
-          - LowGasSafeMathEchidnaTest
-          - UnsafeMathEchidnaTest
-          - FullMathEchidnaTest
+          - SlitherForHardHat
 
     steps:
       - uses: actions/checkout@v2
@@ -50,11 +40,5 @@ jobs:
         run: |
           pip3 install slither-analyzer
 
-      - name: Install echidna
-        run: |
-          sudo wget -O /tmp/echidna-test.tar.gz https://github.com/crytic/echidna/releases/download/v1.6.0/echidna-test-v1.6.0-Ubuntu-18.04.tar.gz
-          sudo tar -xf /tmp/echidna-test.tar.gz -C /usr/bin
-          sudo chmod +x /usr/bin/echidna-test
-
       - name: Run ${{ matrix.testName }}
-        run: echidna-test . --contract ${{ matrix.testName }} --config echidna.config.yml
+        run: slither .
