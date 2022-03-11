@@ -6,6 +6,7 @@
     "func-visibility": ["warn", { "ignoreConstructors": true }],
     "quotes": [2, "single", { "avoidEscape": true }],
     "prettier/prettier": "error",
-    "reason-string": ["warn", { "maxLength": 64 }]
+    "reason-string": ["warn", { "maxLength": 70 }],
+    "var-name-mixedcase": "off"
   }
 }
