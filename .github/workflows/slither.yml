@@ -13,20 +13,19 @@ jobs:
       contents: read
       security-events: write
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Run Slither
-      uses: crytic/slither-action@v0.1.0
-      continue-on-error: true
-      id: slither
-      with:
-        node-version: 16
-        sarif: results.sarif
+      - name: Run Slither
+        uses: crytic/slither-action@v0.1.0
+        continue-on-error: true
+        id: slither
+        with:
+          node-version: 16
+          sarif: results.sarif
 
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v1
-      with:
-        sarif_file: ${{ steps.slither.outputs.sarif }}
-        github_token: ${{ github.token }}
-
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: ${{ steps.slither.outputs.sarif }}
+          github_token: ${{ github.token }}
