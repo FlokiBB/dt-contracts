@@ -8,6 +8,5 @@
     "prettier/prettier": "error",
     "reason-string": ["warn", { "maxLength": 70 }],
     "var-name-mixedcase": "off"
-    
   }
 }

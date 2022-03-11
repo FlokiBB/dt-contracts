@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.4;
 
-import "./ERC721A.sol";
+import './ERC721A.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-
 
 // TODO: recive and fall back
 // TODO: good require message
@@ -20,7 +19,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: call _setRoyalties in initializer
 // TODO: take attention to onlyOwner things
 // TODO: add dev note in above of the function
-contract NFT is ERC721A, Ownable, ReentrancyGuard{
+contract NFT is ERC721A, Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     // ███╗░░██╗███████╗██████╗░░█████╗░██╗░░░░░███████╗██╗░█████╗░
@@ -31,8 +30,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
     // ╚═╝░░╚══╝╚══════╝╚═╝░░░░░░╚════╝░╚══════╝╚══════╝╚═╝╚═╝░░╚═╝
 
     uint16 public immutable MaxSupply;
-    uint public UpgradeRequestFeeInWei;
-
+    uint256 public UpgradeRequestFeeInWei;
 
     struct ContractState {
         bool Initialized;
@@ -45,40 +43,40 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
     ContractState public STATE;
 
     modifier whileAuctionIsActive() {
-        require(STATE.AuctionIsActive == true, "Auction is not active");
+        require(STATE.AuctionIsActive == true, 'Auction is not active');
         _;
     }
     modifier whileMintingIsActive() {
-        require(STATE.MintingIsActive == true, "Minting is not active");
+        require(STATE.MintingIsActive == true, 'Minting is not active');
         _;
     }
     modifier whileWhiteListMintingIsActive() {
-        require(STATE.WhiteListMintingIsActive == true, "WhiteListMinting is not active");
+        require(STATE.WhiteListMintingIsActive == true, 'WhiteListMinting is not active');
         _;
     }
     modifier whileMintigDone() {
-        require(STATE.Finished == true, "Minting is not finished");
-        require(STATE.Initialized == true, "Contract is not initialized");
+        require(STATE.Finished == true, 'Minting is not finished');
+        require(STATE.Initialized == true, 'Contract is not initialized');
         _;
     }
 
     struct ContractAddresses {
-        address Owner; 
+        address Owner;
         address Platform;
-        address DefiTitan; 
+        address DefiTitan;
         address BuyBackTreasury;
         address WhiteListVerifier;
         address RoyalteDistributor;
     }
 
-    ContractAddresses public ADDRESS;  
+    ContractAddresses public ADDRESS;
 
     modifier onlyPlatform() {
-        require(ADDRESS.Platform == _msgSender(), "Only platform address can call this function");
+        require(ADDRESS.Platform == _msgSender(), 'Only platform address can call this function');
         _;
     }
     modifier onlyDefiTitan() {
-        require(ADDRESS.DefiTitan == _msgSender(), "Only defi titan address can call this function");
+        require(ADDRESS.DefiTitan == _msgSender(), 'Only defi titan address can call this function');
         _;
     }
 
@@ -88,29 +86,37 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
         string ArtCID;
     }
 
-    ContractIPFS public IPFS;  
+    ContractIPFS public IPFS;
 
-    mapping (uint16 => bool) public TokenIsUpgraded;
-    mapping (uint16 => string) private _UpgradedTokenCID;
+    mapping(uint16 => bool) public TokenIsUpgraded;
+    mapping(uint16 => string) private _UpgradedTokenCID;
 
-    mapping (uint16 => bool) public TokenIsGod;
+    mapping(uint16 => bool) public TokenIsGod;
 
     modifier onlyHuman(uint16 tokenId_) {
-        require(TokenIsGod[tokenId_] == false, "this function is only functional for humans");
+        require(TokenIsGod[tokenId_] == false, 'this function is only functional for humans');
         _;
     }
 
     struct ConractMintConfing {
         uint256 MintPriceInWei;
         uint16 MaxMintPerAddress;
-        uint AuctionStartTime;
-        uint AuctionDuration;
+        uint256 AuctionStartTime;
+        uint256 AuctionDuration;
         uint8 NumberOFTokenForAuction;
         uint8 RoyaltyFeePercent;
     }
 
     ConractMintConfing public MINTING_CONFIG;
-    constructor(uint16 maxSupply_, ContractAddresses memory addresses_, string memory godCID_, string memory notRevealedArtCID_, ConractMintConfing memory mintConfig_, uint upgradeRequestFeeInWei_) ERC721A('NepoleiaNFT', 'NepoleiaNFT'){
+
+    constructor(
+        uint16 maxSupply_,
+        ContractAddresses memory addresses_,
+        string memory godCID_,
+        string memory notRevealedArtCID_,
+        ConractMintConfing memory mintConfig_,
+        uint256 upgradeRequestFeeInWei_
+    ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') {
         MaxSupply = maxSupply_;
         STATE = ContractState(false, false, false, false, false, false);
         ADDRESS = addresses_;
@@ -121,15 +127,16 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
     }
 
     function initializer(AuctionConfig[] calldata configs) public onlyOwner {
-        require(STATE.Initialized == false, "NFT: contract is already initialized");
-        require(STATE.Finished == false, "NFT: contract is already finished");
-        require(STATE.AuctionIsActive == false, "NFT: auction is already active");
+        require(STATE.Initialized == false, 'NFT: contract is already initialized');
+        require(STATE.Finished == false, 'NFT: contract is already finished');
+        require(STATE.AuctionIsActive == false, 'NFT: auction is already active');
         STATE.Initialized = true;
         _setupGodAuction(configs);
         STATE.AuctionIsActive = true;
 
         _setRoyalties(ADDRESS.RoyalteDistributor, MINTING_CONFIG.RoyaltyFeePercent);
     }
+
     // auction management functions
     struct AuctionConfig {
         uint256 startPrice;
@@ -177,6 +184,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
 
         return auction_.startPrice - discount;
     }
+
     function getAuctionPrice(uint8 day) external view whileAuctionIsActive returns (uint256) {
         require(1 <= day && day <= MINTING_CONFIG.NumberOFTokenForAuction, 'day is out of range');
 
@@ -187,11 +195,13 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
-        require(_totalMinted() + MINTING_CONFIG.NumberOFTokenForAuction <= MaxSupply, 'not enough space for new auctions');
+        require(
+            _totalMinted() + MINTING_CONFIG.NumberOFTokenForAuction <= MaxSupply,
+            'not enough space for new auctions'
+        );
         require(configs.length == MINTING_CONFIG.NumberOFTokenForAuction, 'configs must be the same length as count');
 
         _safeMint(ADDRESS.DefiTitan, MINTING_CONFIG.NumberOFTokenForAuction);
-
 
         // we need set first token id to the token sell in auction for CID availability.
         require(_totalMinted() == MINTING_CONFIG.NumberOFTokenForAuction, 'bad initialization of contract');
@@ -219,17 +229,28 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
 
     // public minting functions
     function publicMint(uint256 quantity) external payable whileMintingIsActive {
-        require(_numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MaxMintPerAddress, "NFT: you have reached the maximum number of mints per address");
+        require(
+            _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MaxMintPerAddress,
+            'NFT: you have reached the maximum number of mints per address'
+        );
         require(quantity * MINTING_CONFIG.MintPriceInWei <= msg.value, 'not enoughs ether');
         _safeMint(msg.sender, quantity);
         _transferEth(ADDRESS.BuyBackTreasury, msg.value);
     }
+
     // whitelist minting functions
     enum WhiteListType {
         Normal,
         Royal
     }
-    function whitelistMinting(address addr_, uint8 maxQuantity_, uint64 quantity_, WhiteListType whiteListType_, bytes calldata sig) external payable whileWhiteListMintingIsActive {
+
+    function whitelistMinting(
+        address addr_,
+        uint8 maxQuantity_,
+        uint64 quantity_,
+        WhiteListType whiteListType_,
+        bytes calldata sig
+    ) external payable whileWhiteListMintingIsActive {
         require(isWhitelisted(addr_, maxQuantity_, whiteListType_, sig), 'signature is not valid');
         require(_totalMinted() + quantity_ <= MaxSupply, 'Max supply is reached');
 
@@ -250,7 +271,12 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
         }
     }
 
-    function isWhitelisted(address account_, uint8 maxQuantity_, WhiteListType whiteListType_, bytes calldata sig_) internal view returns (bool) {
+    function isWhitelisted(
+        address account_,
+        uint8 maxQuantity_,
+        WhiteListType whiteListType_,
+        bytes calldata sig_
+    ) internal view returns (bool) {
         return
             ECDSA.recover(
                 keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)).toEthSignedMessageHash(),
@@ -263,7 +289,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
         require(_exists(tokenId_), 'token does not exist');
 
         uint16 id = uint16(tokenId_);
-        
+
         if (TokenIsUpgraded[id]) {
             return string(abi.encodePacked(_UpgradedTokenCID[id]));
         } else if (TokenIsGod[id]) {
@@ -274,57 +300,65 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
             return string(abi.encodePacked(IPFS.NotRevealedArtCID, Strings.toString(id)));
         }
     }
+
     // State Management functions.
-    function revealArt(string memory ipfsCid) external  onlyOwner{
-        require(STATE.ArtIsRevealed == false, "Art is already revealed");
+    function revealArt(string memory ipfsCid) external onlyOwner {
+        require(STATE.ArtIsRevealed == false, 'Art is already revealed');
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
         IPFS.ArtCID = ipfsCid;
         STATE.ArtIsRevealed = true;
     }
+
     function setPlatform(address platform_) external onlyDefiTitan {
         ADDRESS.Platform = platform_;
     }
+
     function setBuyBackTreasury(address buyBackTreasury_) external onlyPlatform {
         ADDRESS.BuyBackTreasury = buyBackTreasury_;
     }
 
     function startWhiteListMinting() external onlyOwner {
-        require(STATE.Initialized == true, "NFT: contract is not initialized");
-        require(STATE.Finished == false, "NFT: Minting is already finished");
-        require(STATE.WhiteListMintingIsActive == false, "NFT: WhiteListMinting is already active");
+        require(STATE.Initialized == true, 'NFT: contract is not initialized');
+        require(STATE.Finished == false, 'NFT: Minting is already finished');
+        require(STATE.WhiteListMintingIsActive == false, 'NFT: WhiteListMinting is already active');
         STATE.WhiteListMintingIsActive = true;
     }
+
     function startPublicMinting() external onlyOwner {
-        require(STATE.Finished == false, "NFT: Minting is already finished");
-        require(STATE.MintingIsActive == false, "NFT: Minting is already active");
-        require(STATE.WhiteListMintingIsActive == true, "NFT: WhiteListMinting should active before Public Minting");
+        require(STATE.Finished == false, 'NFT: Minting is already finished');
+        require(STATE.MintingIsActive == false, 'NFT: Minting is already active');
+        require(STATE.WhiteListMintingIsActive == true, 'NFT: WhiteListMinting should active before Public Minting');
         STATE.WhiteListMintingIsActive = false;
         STATE.MintingIsActive = true;
     }
 
     function finishAuction() external onlyDefiTitan {
-        require(STATE.Finished == false, "NFT: Minting is already finished");
-        require(STATE.Initialized == true , "NFT: contract is not initialized");
-        require(STATE.AuctionIsActive == true, "NFT: Auction is not active");
+        require(STATE.Finished == false, 'NFT: Minting is already finished');
+        require(STATE.Initialized == true, 'NFT: contract is not initialized');
+        require(STATE.AuctionIsActive == true, 'NFT: Auction is not active');
         STATE.AuctionIsActive = false;
     }
+
     function finishMinting() external onlyDefiTitan {
-        require(STATE.Finished == false, "NFT: Minting is already finished");
-        require(STATE.MintingIsActive == true, "NFT: Minting is not active");
-        require(STATE.WhiteListMintingIsActive == false, "NFT: WhiteListMinting should not active in the middle of the Minting");
+        require(STATE.Finished == false, 'NFT: Minting is already finished');
+        require(STATE.MintingIsActive == true, 'NFT: Minting is not active');
+        require(
+            STATE.WhiteListMintingIsActive == false,
+            'NFT: WhiteListMinting should not active in the middle of the Minting'
+        );
         STATE.MintingIsActive = false;
         STATE.AuctionIsActive = false;
         STATE.Finished = true;
     }
 
-    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintigDone{
+    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintigDone {
         UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
     }
 
     // utility functions
 
-    function _transferEth (address to_, uint256 amount) private {
+    function _transferEth(address to_, uint256 amount) private {
         address payable to = payable(to_);
         (bool sent, ) = to.call{value: amount}('');
         require(sent, 'Failed to send Ether');
@@ -346,7 +380,11 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
         // TODO: emit a special event in here
     }
 
-    function upgradeToken(string memory ipfsCid, uint16 tokenId, bool isGodNow) external whileMintigDone onlyPlatform onlyHuman(tokenId) {
+    function upgradeToken(
+        string memory ipfsCid,
+        uint16 tokenId,
+        bool isGodNow
+    ) external whileMintigDone onlyPlatform onlyHuman(tokenId) {
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
         require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
@@ -360,7 +398,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
     }
 
     // Token BuyBack management functions
-        function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) {
+    function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory ownership = ownershipOf(tokenId);
         require(msg.sender == ownership.addr, 'only owner of token can buy back token');
@@ -396,5 +434,4 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard{
     // ██╔══╝░░██║░░░░░██║░░██║██╔═██╗░██║  ██╔══██╗██╔══██╗
     // ██║░░░░░███████╗╚█████╔╝██║░╚██╗██║  ██████╦╝██████╦╝
     // ╚═╝░░░░░╚══════╝░╚════╝░╚═╝░░╚═╝╚═╝  ╚═════╝░╚═════╝░
-
 }
