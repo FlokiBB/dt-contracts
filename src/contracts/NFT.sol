@@ -40,20 +40,20 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
     ContractState public STATE;
 
     modifier whileAuctionIsActive() {
-        require(STATE.AuctionIsActive == true, 'Auction is not active');
+        require(STATE.AuctionIsActive, 'Auction is not active');
         _;
     }
     modifier whileMintingIsActive() {
-        require(STATE.MintingIsActive == true, 'Minting is not active');
+        require(STATE.MintingIsActive, 'Minting is not active');
         _;
     }
     modifier whileWhiteListMintingIsActive() {
-        require(STATE.WhiteListMintingIsActive == true, 'WhiteListMinting is not active');
+        require(STATE.WhiteListMintingIsActive, 'WhiteListMinting is not active');
         _;
     }
     modifier whileMintigDone() {
-        require(STATE.Finished == true, 'Minting is not finished');
-        require(STATE.Initialized == true, 'Contract is not initialized');
+        require(STATE.Finished, 'Minting is not finished');
+        require(STATE.Initialized, 'Contract is not initialized');
         _;
     }
 
@@ -124,9 +124,9 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
     }
 
     function initializer(AuctionConfig[] calldata configs) public onlyOwner {
-        require(STATE.Initialized == false, 'NFT: contract is already initialized');
-        require(STATE.Finished == false, 'NFT: contract is already finished');
-        require(STATE.AuctionIsActive == false, 'NFT: auction is already active');
+        require(!STATE.Initialized, 'NFT: contract is already initialized');
+        require(!STATE.Finished, 'NFT: contract is already finished');
+        require(!STATE.AuctionIsActive, 'NFT: auction is already active');
         STATE.Initialized = true;
         _setupGodAuction(configs);
         STATE.AuctionIsActive = true;
@@ -300,7 +300,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
 
     // State Management functions.
     function revealArt(string memory ipfsCid) external onlyOwner {
-        require(STATE.ArtIsRevealed == false, 'Art is already revealed');
+        require(!STATE.ArtIsRevealed, 'Art is already revealed');
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
         IPFS.ArtCID = ipfsCid;
@@ -316,32 +316,32 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
     }
 
     function startWhiteListMinting() external onlyOwner {
-        require(STATE.Initialized == true, 'NFT: contract is not initialized');
-        require(STATE.Finished == false, 'NFT: Minting is already finished');
-        require(STATE.WhiteListMintingIsActive == false, 'NFT: WhiteListMinting is already active');
+        require(STATE.Initialized, 'NFT: contract is not initialized');
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(!STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting is already active');
         STATE.WhiteListMintingIsActive = true;
     }
 
     function startPublicMinting() external onlyOwner {
-        require(STATE.Finished == false, 'NFT: Minting is already finished');
-        require(STATE.MintingIsActive == false, 'NFT: Minting is already active');
-        require(STATE.WhiteListMintingIsActive == true, 'NFT: WhiteListMinting should active before Public Minting');
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(!STATE.MintingIsActive, 'NFT: Minting is already active');
+        require(STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting should active before Public Minting');
         STATE.WhiteListMintingIsActive = false;
         STATE.MintingIsActive = true;
     }
 
     function finishAuction() external onlyDefiTitan {
-        require(STATE.Finished == false, 'NFT: Minting is already finished');
-        require(STATE.Initialized == true, 'NFT: contract is not initialized');
-        require(STATE.AuctionIsActive == true, 'NFT: Auction is not active');
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(STATE.Initialized, 'NFT: contract is not initialized');
+        require(STATE.AuctionIsActive, 'NFT: Auction is not active');
         STATE.AuctionIsActive = false;
     }
 
     function finishMinting() external onlyDefiTitan {
-        require(STATE.Finished == false, 'NFT: Minting is already finished');
-        require(STATE.MintingIsActive == true, 'NFT: Minting is not active');
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(STATE.MintingIsActive, 'NFT: Minting is not active');
         require(
-            STATE.WhiteListMintingIsActive == false,
+            !STATE.WhiteListMintingIsActive,
             'NFT: WhiteListMinting should not active in the middle of the Minting'
         );
         STATE.MintingIsActive = false;
