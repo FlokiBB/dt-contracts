@@ -10,14 +10,11 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // TODO: recive and fall back
 // TODO: good require message
-// TODO: move row require in head of an function to proper modifier
 // TODO: proper name for functions and variables
 // TODO: add proper Event to functions
 // TODO: set getter and setter for variables if needed
-// TODO: implement maxSupply in contract
 // ToDo: attention to eip165
-// TODO: call _setRoyalties in initializer
-// TODO: take attention to onlyOwner things
+// TODO: check 2982 correctnes of impelementation
 // TODO: add dev note in above of the function
 contract NFT is ERC721A, Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
