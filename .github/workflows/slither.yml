@@ -8,13 +8,13 @@ on:
 
 jobs:
   slither:
-    name: Slither
+    name: Security
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         testName:
-          - SlitherForHardHat
+          - Slither For HardHat
 
     steps:
       - uses: actions/checkout@v2
