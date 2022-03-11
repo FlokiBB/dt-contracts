@@ -196,12 +196,12 @@ contract NepoleiaNFT is ERC721A {
         uint64 _aux = _getAux(addr);
         require(_aux + quantity <= maxQuantity, 'quantity is not allowed');
         if (typeOFWhiteList == TypeOFWhiteList.Royal) {
-            _safeMint(addr, quantity);
             _setAux(addr, _aux + quantity);
+            _safeMint(addr, quantity);
         } else {
             require(quantity * mintPrice <= msg.value, 'quantity is not allowed');
-            _safeMint(addr, quantity);
             _setAux(addr, _aux + quantity);
+            _safeMint(addr, quantity);
         }
     }
 
