@@ -7,38 +7,26 @@ on:
   pull_request:
 
 jobs:
-  slither:
-    name: Security
+  analyze:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        testName:
-          - Slither For HardHat
-
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Set up node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
+    - name: Run Slither
+      uses: crytic/slither-action@v0.1.0
+      continue-on-error: true
+      id: slither
+      with:
+        node-version: 16
+        sarif: results.sarif
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.slither.outputs.sarif }}
+        github_token: ${{ github.token }}
 
-      - name: Install node dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Install pip3
-        run: |
-          python -m pip install --upgrade pip
-
-      - name: Install slither
-        run: |
-          pip3 install slither-analyzer
-
-      - name: Run slither
-        run: slither .
