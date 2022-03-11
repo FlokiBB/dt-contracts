@@ -44,3 +44,7 @@ for running solidity linter run the following command:
 ```
  npx solhint src/contracts/example.sol --fix
 ```
+
+---
+
+TODO: active SARIF in slither github  action after publicizing the repo
