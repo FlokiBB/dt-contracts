@@ -8,13 +8,13 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
-// TODO: recive and fall back
+// TODO: receive and fall back
 // TODO: good require message
 // TODO: proper name for functions and variables
 // TODO: add proper Event to functions
 // TODO: set getter and setter for variables if needed
 // ToDo: attention to eip165
-// TODO: check 2982 correctnes of impelementation
+// TODO: check 2982 correctness of implementation
 // TODO: add NatSpec in above of the function
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
 // TODO: add unit test and using this https://www.npmjs.com/package/hardhat-gas-trackooor or https://www.npmjs.com/package/hardhat-gas-reporter + dapp snapshot
@@ -53,7 +53,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         require(STATE.WhiteListMintingIsActive, 'WhiteListMinting is not active');
         _;
     }
-    modifier whileMintigDone() {
+    modifier whileMintingDone() {
         require(STATE.Finished, 'Minting is not finished');
         require(STATE.Initialized, 'Contract is not initialized');
         _;
@@ -65,7 +65,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         address DefiTitan;
         address BuyBackTreasury;
         address WhiteListVerifier;
-        address RoyalteDistributor;
+        address RoyaltyDistributor;
     }
 
     ContractAddresses public ADDRESS;
@@ -97,7 +97,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         _;
     }
 
-    struct ConractMintConfing {
+    struct ContactMintConfig {
         uint256 MintPriceInWei;
         uint16 MaxMintPerAddress;
         uint256 AuctionStartTime;
@@ -106,14 +106,14 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         uint8 RoyaltyFeePercent;
     }
 
-    ConractMintConfing public MINTING_CONFIG;
+    ContactMintConfig public MINTING_CONFIG;
 
     constructor(
         uint16 maxSupply_,
         ContractAddresses memory addresses_,
         string memory godCID_,
         string memory notRevealedArtCID_,
-        ConractMintConfing memory mintConfig_,
+        ContactMintConfig memory mintConfig_,
         uint256 upgradeRequestFeeInWei_
     ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') {
         MaxSupply = maxSupply_;
@@ -133,7 +133,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         _setupGodAuction(configs);
         STATE.AuctionIsActive = true;
 
-        _setRoyalties(ADDRESS.RoyalteDistributor, MINTING_CONFIG.RoyaltyFeePercent);
+        _setRoyalties(ADDRESS.RoyaltyDistributor, MINTING_CONFIG.RoyaltyFeePercent);
     }
 
     // auction management functions
@@ -261,7 +261,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
             _setAux(addr_, _aux + quantity_);
             _safeMint(addr_, quantity_);
         } else {
-            require(quantity_ * MINTING_CONFIG.MintPriceInWei <= msg.value, 'Not enought ether.');
+            require(quantity_ * MINTING_CONFIG.MintPriceInWei <= msg.value, 'Not enoughs ether.');
             _setAux(addr_, _aux + quantity_);
             _safeMint(addr_, quantity_);
         }
@@ -351,7 +351,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         STATE.Finished = true;
     }
 
-    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintigDone {
+    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintingDone {
         UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
     }
 
@@ -363,11 +363,11 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         require(sent, 'Failed to send Ether');
     }
 
-    // Token Upgradability management functions
+    // Token Upgradeability management functions
 
     mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
 
-    function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintigDone onlyHuman(tokenId) {
+    function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory ownership = ownershipOf(tokenId);
         require(msg.sender == ownership.addr, 'only owner of token can upgrade token');
@@ -383,7 +383,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         string memory ipfsCid,
         uint16 tokenId,
         bool isGodNow
-    ) external whileMintigDone onlyPlatform onlyHuman(tokenId) {
+    ) external whileMintingDone onlyPlatform onlyHuman(tokenId) {
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
         require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
