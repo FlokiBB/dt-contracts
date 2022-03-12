@@ -48,3 +48,11 @@ for running solidity linter run the following command:
 ---
 
 TODO: active SARIF in slither github action after publicizing the repo
+
+---
+
+for exporting abi
+
+```
+npx hardhat export-abi
+```

@@ -7,6 +7,7 @@ import '@nomiclabs/hardhat-solhint'
 import '@typechain/hardhat'
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
+import 'hardhat-abi-exporter'
 
 dotenv.config()
 
@@ -51,6 +52,14 @@ const config: HardhatUserConfig = {
     sources: './src/contracts',
     tests: './src/test',
     artifacts: './artifacts',
+  },
+  abiExporter: {
+    path: './ABI',
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    spacing: 2,
+    pretty: true,
   },
 }
 
