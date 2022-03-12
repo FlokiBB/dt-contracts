@@ -15,7 +15,9 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: set getter and setter for variables if needed
 // ToDo: attention to eip165
 // TODO: check 2982 correctnes of impelementation
-// TODO: add dev note in above of the function
+// TODO: add NatSpec in above of the function
+// TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
+// TODO: add unit test and using this https://www.npmjs.com/package/hardhat-gas-trackooor or https://www.npmjs.com/package/hardhat-gas-reporter
 contract NFT is ERC721A, Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
 
