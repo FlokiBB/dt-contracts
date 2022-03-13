@@ -3,7 +3,7 @@
 pragma solidity ^0.8.4;
 
 import './ERC721A.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import './NepoleiaOwnable.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
@@ -18,7 +18,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: add NatSpec in above of the function
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
 // TODO: add unit test and using this https://www.npmjs.com/package/hardhat-gas-trackooor or https://www.npmjs.com/package/hardhat-gas-reporter + dapp snapshot
-contract NFT is ERC721A, Ownable, ReentrancyGuard {
+contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     // ███╗░░██╗███████╗██████╗░░█████╗░██╗░░░░░███████╗██╗░█████╗░
@@ -115,7 +115,7 @@ contract NFT is ERC721A, Ownable, ReentrancyGuard {
         string memory notRevealedArtCID_,
         ContactMintConfig memory mintConfig_,
         uint256 upgradeRequestFeeInWei_
-    ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') {
+    ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') NepoleiaOwnable(addresses_.Owner) {
         MaxSupply = maxSupply_;
         STATE = ContractState(false, false, false, false, false, false);
         ADDRESS = addresses_;
