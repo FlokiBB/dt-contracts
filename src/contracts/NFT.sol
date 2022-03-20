@@ -174,8 +174,8 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         Auction memory auction = Auctions[day];
         uint256 currentPrice = _getAuctionPrice(auction);
 
-        require(currentPrice  >= auction.endPrice , 'auction has ended because it receive to base price');
-        require(currentPrice  <= (msg.value / 1 ether), 'not enough money');
+        require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
+        require(currentPrice <= (msg.value / 1 ether), 'not enough money');
 
         transferFrom(ADDRESS.DefiTitan, msg.sender, tokenId);
 
@@ -189,7 +189,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         uint256 discount = auction_.discountRate * timeElapsedInHours;
         uint256 currentPrice = auction_.startPrice - discount;
 
-        return currentPrice ;
+        return currentPrice;
     }
 
     function getAuctionPrice(uint8 day) external view whileAuctionIsActive returns (uint256) {
@@ -198,9 +198,8 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         uint256 timeElapsed = block.timestamp - Auctions[day].startTime;
         uint256 timeElapsedInHours = timeElapsed / 3600;
 
-
-        uint256 discount = Auctions[day].discountRate  * timeElapsedInHours;
-        return Auctions[day].startPrice  - discount ;
+        uint256 discount = Auctions[day].discountRate * timeElapsedInHours;
+        return Auctions[day].startPrice - discount;
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
@@ -220,9 +219,9 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
                 i,
                 MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * i,
                 MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * (i + 1),
-                configs[i].startPrice ,
-                configs[i].endPrice ,
-                configs[i].discountRate / (10 ** 3)
+                configs[i].startPrice,
+                configs[i].endPrice,
+                configs[i].discountRate / (10**3)
             );
             Auctions[i + 1] = _auction;
             _defiTitanAuctionApproval(i);
