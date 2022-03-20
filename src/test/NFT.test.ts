@@ -61,6 +61,7 @@ describe('NFT', function () {
     )) as NFT;
   });
 
+  // TODO: check name and symbol
   describe('#constructor', () => {
     it('should have correct max supply', async () => {
       const maxSupply = await NFTContract.MaxSupply();
@@ -109,4 +110,62 @@ describe('NFT', function () {
       expect(notRevealedArtCID).to.equal(notRevealedArtCID_);
     });
   });
+
+  describe('#initializer', () => {
+
+  });
+
+  describe('', () => {
+    // test buy in auction in normal case
+    // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
+    // test buy in auction . check currentness of the price decrement
+    // check buy in auction for the day that is not coming yet
+    // test buy in auction when auction is not started
+    // test buy in auction when auction is ended
+    // test buy in auction with not enough balance
+  });
+
+  describe('#mint', () => {
+    // test white list (normal and royal)
+    // test normal mint scenario cases
+    // test mint when max supply is reached
+    // test mint when max mint per address is reached
+    // test mint when auction is not started
+    // test mint when auction is ended
+    // test mint when not enough balance
+  });
+
+  describe('#burn', () => {
+    // buyback 
+    // god are not allowed to burn
+  });
+
+  describe('#upgrade', () => {
+
+  });
+
+  describe('#transfer', () => {
+
+  });
+
+  describe('#approve', () => {
+
+  });
+
+  describe('#transferFrom', () => {
+
+  });
+
+  describe('#setApprovalForAll', () => {
+
+  });
+
+  describe('#RevealArt', () => {
+  });
+
+  describe('#EIP2982', () => {});
+
+  describe('#CustomOwnable', () => {});
+
+  describe('#TokenURI', () => {});
 });

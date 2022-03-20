@@ -27,10 +27,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     // ██║╚████║██╔══╝░░██╔═══╝░██║░░██║██║░░░░░██╔══╝░░██║██╔══██║
     // ██║░╚███║███████╗██║░░░░░╚█████╔╝███████╗███████╗██║██║░░██║
     // ╚═╝░░╚══╝╚══════╝╚═╝░░░░░░╚════╝░╚══════╝╚══════╝╚═╝╚═╝░░╚═╝
-
-    uint16 public immutable MaxSupply;
-    uint256 public UpgradeRequestFeeInWei;
-
     struct ContractState {
         bool Initialized;
         bool AuctionIsActive;
@@ -39,7 +35,71 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         bool ArtIsRevealed;
         bool Finished;
     }
+
+    struct ContractAddresses {
+        address Owner;
+        address Platform;
+        address DefiTitan;
+        address BuyBackTreasury;
+        address WhiteListVerifier;
+        address RoyaltyDistributor;
+    }
+
+    struct ContractIPFS {
+        string GodCID;
+        string NotRevealedArtCID;
+        string ArtCID;
+    }
+
+    struct ContactMintConfig {
+        uint256 MintPriceInWei;
+        uint16 MaxMintPerAddress;
+        uint256 AuctionStartTime;
+        uint256 AuctionDuration;
+        uint8 NumberOFTokenForAuction;
+        uint8 RoyaltyFeePercent;
+    }
+
+    struct AuctionConfig {
+        uint256 startPrice;
+        uint256 endPrice;
+        uint256 discountRate;
+    }
+    struct Auction {
+        uint8 tokenID;
+        uint256 startTime;
+        uint256 expiresAt;
+        uint256 startPrice;
+        uint256 endPrice;
+        uint256 discountRate;
+    }
+
+    struct RoyaltyInfo {
+        address recipient;
+        uint8 percent;
+    }
+
+    enum WhiteListType {
+        Normal,
+        Royal
+    }
+
+    uint16 public immutable MaxSupply;
+    uint256 public UpgradeRequestFeeInWei;
     ContractState public STATE;
+    ContractAddresses public ADDRESS;
+    ContractIPFS public IPFS;
+    ContactMintConfig public MINTING_CONFIG;
+    RoyaltyInfo private _royalties;
+
+
+
+    mapping(uint16 => bool) public TokenIsUpgraded;
+    mapping(uint16 => string) private _UpgradedTokenCID;
+    mapping(uint16 => bool) public TokenIsGod;
+    mapping(uint8 => Auction) public Auctions;
+    mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
+
 
     modifier whileAuctionIsActive() {
         require(STATE.AuctionIsActive, 'Auction is not active');
@@ -59,17 +119,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         _;
     }
 
-    struct ContractAddresses {
-        address Owner;
-        address Platform;
-        address DefiTitan;
-        address BuyBackTreasury;
-        address WhiteListVerifier;
-        address RoyaltyDistributor;
-    }
-
-    ContractAddresses public ADDRESS;
-
     modifier onlyPlatform() {
         require(ADDRESS.Platform == _msgSender(), 'Only platform address can call this function');
         _;
@@ -79,34 +128,10 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         _;
     }
 
-    struct ContractIPFS {
-        string GodCID;
-        string NotRevealedArtCID;
-        string ArtCID;
-    }
-
-    ContractIPFS public IPFS;
-
-    mapping(uint16 => bool) public TokenIsUpgraded;
-    mapping(uint16 => string) private _UpgradedTokenCID;
-
-    mapping(uint16 => bool) public TokenIsGod;
-
     modifier onlyHuman(uint16 tokenId_) {
         require(TokenIsGod[tokenId_] == false, 'this function is only functional for humans');
         _;
     }
-
-    struct ContactMintConfig {
-        uint256 MintPriceInWei;
-        uint16 MaxMintPerAddress;
-        uint256 AuctionStartTime;
-        uint256 AuctionDuration;
-        uint8 NumberOFTokenForAuction;
-        uint8 RoyaltyFeePercent;
-    }
-
-    ContactMintConfig public MINTING_CONFIG;
 
     constructor(
         uint16 maxSupply_,
@@ -136,23 +161,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         _setRoyalties(ADDRESS.RoyaltyDistributor, MINTING_CONFIG.RoyaltyFeePercent);
     }
 
-    // auction management functions
-    struct AuctionConfig {
-        uint256 startPrice;
-        uint256 endPrice;
-        uint256 discountRate;
-    }
-    struct Auction {
-        uint8 tokenID;
-        uint256 startTime;
-        uint256 expiresAt;
-        uint256 startPrice;
-        uint256 endPrice;
-        uint256 discountRate;
-    }
 
-    // in each day we have one auction
-    mapping(uint8 => Auction) public Auctions;
 
     function buyGod(uint8 day) external payable whileAuctionIsActive {
         // buy god
@@ -238,10 +247,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     // whitelist minting functions
-    enum WhiteListType {
-        Normal,
-        Royal
-    }
+
 
     function whitelistMinting(
         address addr_,
@@ -365,7 +371,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
 
     // Token Upgradeability management functions
 
-    mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
 
     function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
         require(_exists(tokenId), 'token does not exist');
@@ -408,11 +413,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
 
     // EIP 2981 functions
 
-    struct RoyaltyInfo {
-        address recipient;
-        uint8 percent;
-    }
-    RoyaltyInfo private _royalties;
+
 
     /// @dev Sets token royalties
     /// @param recipient recipient of the royalties
