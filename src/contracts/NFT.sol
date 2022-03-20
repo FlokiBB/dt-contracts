@@ -92,14 +92,11 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     ContactMintConfig public MINTING_CONFIG;
     RoyaltyInfo private _royalties;
 
-
-
     mapping(uint16 => bool) public TokenIsUpgraded;
     mapping(uint16 => string) private _UpgradedTokenCID;
     mapping(uint16 => bool) public TokenIsGod;
     mapping(uint8 => Auction) public Auctions;
     mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
-
 
     modifier whileAuctionIsActive() {
         require(STATE.AuctionIsActive, 'Auction is not active');
@@ -160,8 +157,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
 
         _setRoyalties(ADDRESS.RoyaltyDistributor, MINTING_CONFIG.RoyaltyFeePercent);
     }
-
-
 
     function buyGod(uint8 day) external payable whileAuctionIsActive {
         // buy god
@@ -247,7 +242,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     // whitelist minting functions
-
 
     function whitelistMinting(
         address addr_,
@@ -371,7 +365,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
 
     // Token Upgradeability management functions
 
-
     function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory ownership = ownershipOf(tokenId);
@@ -412,8 +405,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     // EIP 2981 functions
-
-
 
     /// @dev Sets token royalties
     /// @param recipient recipient of the royalties
