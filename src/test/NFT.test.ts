@@ -21,11 +21,25 @@ describe('NFT', function () {
   const MaxMintPerAddress_ = 3;
   const AuctionStartTime_ = 0; // set current epoch time
   const AuctionDuration_ = 86400 // 1 day
-  const NumberOFTokenForAuction_ = 10;
+  const NumberOFTokenForAuction_ = 3;
   const RoyaltyFeePercent_ = 10;
 
   const upgradeRequestFeeInWei_ = ethers.utils.parseEther('0.01');
 
+  const auctionConfig = [
+  {
+    startPrice: 50,
+    endPrice: 5 ,
+    discountRate: 1875,
+  },{
+    startPrice: 5 ,
+    endPrice: 2,
+    discountRate: 125,
+  },{
+    startPrice: 10,
+    endPrice: 1 ,
+    discountRate: 375,
+  }];
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
@@ -111,7 +125,16 @@ describe('NFT', function () {
     });
   });
 
-  describe('#initializer', () => {
+  describe('#initializer', async () => {
+    it('should have correct royaltyInfo', async () => {   
+      await NFTContract.initializer(auctionConfig);
+      const tempValue = 100;
+      const tempRoyalty = 10
+      const {receiver, royaltyAmount} = await NFTContract.royaltyInfo(0,tempValue);  
+      expect(receiver).to.equal(royaltyDistributorAddress);
+      expect(royaltyAmount).to.equal(tempRoyalty);
+    });
+    // check the owner of the god in here 
 
   });
 

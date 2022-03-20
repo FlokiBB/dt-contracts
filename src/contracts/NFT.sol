@@ -18,6 +18,8 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: add NatSpec in above of the function
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
 // TODO: add unit test and using this https://www.npmjs.com/package/hardhat-gas-trackooor or https://www.npmjs.com/package/hardhat-gas-reporter + dapp snapshot
+// TODO: use error instead of revert
+// TODO: return remaining msg.value in mint and auction
 contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     using ECDSA for bytes32;
 
@@ -61,9 +63,9 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     struct AuctionConfig {
-        uint256 startPrice;
-        uint256 endPrice;
-        uint256 discountRate;
+        uint256 startPrice; // in ether
+        uint256 endPrice; // in ether
+        uint256 discountRate; // amount of the discount per unit of auction duration * 1000
     }
     struct Auction {
         uint8 tokenID;
@@ -147,7 +149,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
     }
 
-    function initializer(AuctionConfig[] calldata configs) public onlyOwner {
+    function initializer(AuctionConfig[] calldata configs) external onlyOwner {
         require(!STATE.Initialized, 'NFT: contract is already initialized');
         require(!STATE.Finished, 'NFT: contract is already finished');
         require(!STATE.AuctionIsActive, 'NFT: auction is already active');
@@ -172,8 +174,8 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         Auction memory auction = Auctions[day];
         uint256 currentPrice = _getAuctionPrice(auction);
 
-        require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
-        require(currentPrice <= msg.value, 'not enough money');
+        require(currentPrice  >= auction.endPrice , 'auction has ended because it receive to base price');
+        require(currentPrice  <= (msg.value / 1 ether), 'not enough money');
 
         transferFrom(ADDRESS.DefiTitan, msg.sender, tokenId);
 
@@ -182,19 +184,23 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
         uint256 timeElapsed = block.timestamp - auction_.startTime;
+        uint256 timeElapsedInHours = timeElapsed / 3600;
 
-        uint256 discount = auction_.discountRate * timeElapsed;
+        uint256 discount = auction_.discountRate * timeElapsedInHours;
+        uint256 currentPrice = auction_.startPrice - discount;
 
-        return auction_.startPrice - discount;
+        return currentPrice ;
     }
 
     function getAuctionPrice(uint8 day) external view whileAuctionIsActive returns (uint256) {
         require(1 <= day && day <= MINTING_CONFIG.NumberOFTokenForAuction, 'day is out of range');
 
         uint256 timeElapsed = block.timestamp - Auctions[day].startTime;
+        uint256 timeElapsedInHours = timeElapsed / 3600;
 
-        uint256 discount = Auctions[day].discountRate * timeElapsed;
-        return Auctions[day].startPrice - discount;
+
+        uint256 discount = Auctions[day].discountRate  * timeElapsedInHours;
+        return Auctions[day].startPrice  - discount ;
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
@@ -214,9 +220,9 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
                 i,
                 MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * i,
                 MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * (i + 1),
-                configs[i].startPrice,
-                configs[i].endPrice,
-                configs[i].discountRate
+                configs[i].startPrice ,
+                configs[i].endPrice ,
+                configs[i].discountRate / (10 ** 3)
             );
             Auctions[i + 1] = _auction;
             _defiTitanAuctionApproval(i);
