@@ -128,7 +128,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     modifier onlyHuman(uint16 tokenId_) {
-        require(TokenIsGod[tokenId_] == false, 'this function is only functional for humans');
+        require(!TokenIsGod[tokenId_], 'this function is only functional for humans');
         _;
     }
 
