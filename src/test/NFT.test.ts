@@ -19,7 +19,7 @@ describe('NFT', function () {
 
   const MintPriceInWei_ = ethers.utils.parseEther('0.05');
   const MaxMintPerAddress_ = 3;
-  const AuctionStartTime_ = 0; // set current epoch time
+  const AuctionStartTime_ = Date.now(); // set current epoch time
   const AuctionDuration_ = 86400 // 1 day
   const NumberOFTokenForAuction_ = 3;
   const RoyaltyFeePercent_ = 10;
@@ -27,19 +27,19 @@ describe('NFT', function () {
   const upgradeRequestFeeInWei_ = ethers.utils.parseEther('0.01');
 
   const auctionConfig = [
-  {
-    startPrice: 50,
-    endPrice: 5 ,
-    discountRate: 1875,
-  },{
-    startPrice: 5 ,
-    endPrice: 2,
-    discountRate: 125,
-  },{
-    startPrice: 10,
-    endPrice: 1 ,
-    discountRate: 375,
-  }];
+    {
+      startPrice: 50,
+      endPrice: 5,
+      discountRate: 1875,
+    }, {
+      startPrice: 5,
+      endPrice: 2,
+      discountRate: 125,
+    }, {
+      startPrice: 10,
+      endPrice: 1,
+      discountRate: 375,
+    }];
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
@@ -54,11 +54,11 @@ describe('NFT', function () {
       maxSupply_,
       {
         Owner: ownerAddress,
-        Platform : platformMultisigAddress,
-        DefiTitan : defiTitanAddress,
-        BuyBackTreasury : buyBackTreasuryContractAddress,
-        WhiteListVerifier : whiteListVerifierAddress,
-        RoyaltyDistributor : royaltyDistributorAddress,
+        Platform: platformMultisigAddress,
+        DefiTitan: defiTitanAddress,
+        BuyBackTreasury: buyBackTreasuryContractAddress,
+        WhiteListVerifier: whiteListVerifierAddress,
+        RoyaltyDistributor: royaltyDistributorAddress,
 
       },
       godCID_,
@@ -126,15 +126,45 @@ describe('NFT', function () {
   });
 
   describe('#initializer', async () => {
-    it('should have correct royaltyInfo', async () => {   
+    beforeEach(async () => {
       await NFTContract.initializer(auctionConfig);
+    });
+    it('should have correct royaltyInfo', async () => {
       const tempValue = 100;
       const tempRoyalty = 10
-      const {receiver, royaltyAmount} = await NFTContract.royaltyInfo(0,tempValue);  
+      const { receiver, royaltyAmount } = await NFTContract.royaltyInfo(0, tempValue);
       expect(receiver).to.equal(royaltyDistributorAddress);
       expect(royaltyAmount).to.equal(tempRoyalty);
     });
-    // check the owner of the god in here 
+    it('the owner of the these three token should be defi titan in the first place', async () => {
+      const ownerAddress: string[] = []
+      for (let i = 0; i < NumberOFTokenForAuction_; i++) {
+        const address = await NFTContract.ownerOf(i);
+        console.log(`owner of token ${i} is ${address}`);
+        if (!ownerAddress.includes(address as string)) {
+          ownerAddress.push(address as string);
+        }
+      }
+      expect(ownerAddress.length).to.equal(1);
+      expect(ownerAddress[0]).to.equal(defiTitanAddress);
+    });
+
+    it('maxSupply should be equal to number of token in auction in this stage', async () => {
+      const currentSupply = await NFTContract.totalSupply();
+      const numberOfTokenInAuction = (await NFTContract.MINTING_CONFIG()).NumberOFTokenForAuction;
+      expect(currentSupply).to.equal(numberOfTokenInAuction);
+    });
+
+    it('should set auction config correctly', async () => {
+      for (let i = 0; i < NumberOFTokenForAuction_; i++) {
+        const auction = await NFTContract.Auctions(i+1);
+        console.log(auction);
+        console.log(await NFTContract.getAuctionPrice(i+1));
+        expect(auction.startPrice).to.equal(auctionConfig[i].startPrice);
+        expect(auction.endPrice).to.equal(auctionConfig[i].endPrice);
+        expect(auction.discountRate).to.equal(auctionConfig[i].discountRate);
+      }
+    });
 
   });
 
@@ -186,9 +216,9 @@ describe('NFT', function () {
   describe('#RevealArt', () => {
   });
 
-  describe('#EIP2982', () => {});
+  describe('#EIP2982', () => { });
 
-  describe('#CustomOwnable', () => {});
+  describe('#CustomOwnable', () => { });
 
-  describe('#TokenURI', () => {});
+  describe('#TokenURI', () => { });
 });
