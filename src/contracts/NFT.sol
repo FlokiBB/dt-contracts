@@ -175,7 +175,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         uint256 currentPrice = _getAuctionPrice(auction);
 
         require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
-        require(currentPrice <= msg.value , 'not enough money');
+        require(currentPrice <= msg.value, 'not enough money');
 
         transferFrom(ADDRESS.DefiTitan, msg.sender, tokenId);
 
@@ -187,8 +187,8 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
             uint256 timeElapsed = block.timestamp - auction_.startTime;
             uint256 timeElapsedInHours = timeElapsed / 3600;
 
-            uint256 discount = auction_.discountRate  * timeElapsedInHours;
-            uint256 currentPrice = (auction_.startPrice * 10 ** 18) - (discount * 10 ** 15);
+            uint256 discount = auction_.discountRate * timeElapsedInHours;
+            uint256 currentPrice = (auction_.startPrice * 10**18) - (discount * 10**15);
 
             return currentPrice;
         }
@@ -202,7 +202,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
             uint256 timeElapsedInHours = timeElapsed / 3600;
 
             uint256 discount = Auctions[day].discountRate * timeElapsedInHours;
-            uint256 currentPrice = (Auctions[day].startPrice * 10 ** 18) - (discount * 10 ** 15);
+            uint256 currentPrice = (Auctions[day].startPrice * 10**18) - (discount * 10**15);
             return currentPrice;
         }
     }
