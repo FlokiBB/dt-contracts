@@ -19,7 +19,7 @@ describe('NFT', function () {
 
   const MintPriceInWei_ = ethers.utils.parseEther('0.05');
   const MaxMintPerAddress_ = 3;
-  const AuctionStartTime_ = 0; // set current epoch time
+  const AuctionStartTime_ = Date.now(); // set current epoch time
   const AuctionDuration_ = 86400 // 1 day
   const NumberOFTokenForAuction_ = 3;
   const RoyaltyFeePercent_ = 10;
@@ -153,6 +153,17 @@ describe('NFT', function () {
       const currentSupply = await NFTContract.totalSupply();
       const numberOfTokenInAuction = (await NFTContract.MINTING_CONFIG()).NumberOFTokenForAuction;
       expect(currentSupply).to.equal(numberOfTokenInAuction);
+    });
+
+    it('should set auction config correctly', async () => {
+      for (let i = 0; i < NumberOFTokenForAuction_; i++) {
+        const auction = await NFTContract.Auctions(i+1);
+        console.log(auction);
+        console.log(await NFTContract.getAuctionPrice(i+1));
+        expect(auction.startPrice).to.equal(auctionConfig[i].startPrice);
+        expect(auction.endPrice).to.equal(auctionConfig[i].endPrice);
+        expect(auction.discountRate).to.equal(auctionConfig[i].discountRate);
+      }
     });
 
   });
