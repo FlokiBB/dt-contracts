@@ -17,11 +17,15 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: check 2982 correctness of implementation
 // TODO: add NatSpec in above of the function
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
-// TODO: add unit test and using this https://www.npmjs.com/package/hardhat-gas-trackooor or https://www.npmjs.com/package/hardhat-gas-reporter + dapp snapshot
-// TODO: use error instead of revert
+// TODO: use error instead of revert(it help to deployment cost but there is trade off)
 // TODO: return remaining msg.value in mint and auction
+<<<<<<< HEAD
 //@audit-ok
 contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard { 
+=======
+// TODO: write auction based on step reduced and wei
+contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
+>>>>>>> 9df39350276cd73ec9b9fc62a409ad7fe6854583
     using ECDSA for bytes32;
 
     // ███╗░░██╗███████╗██████╗░░█████╗░██╗░░░░░███████╗██╗░█████╗░
@@ -234,7 +238,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         uint256 currentPrice = _getAuctionPrice(auction);
 
         require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
-        require(currentPrice <= (msg.value / 1 ether), 'not enough money');
+        require(currentPrice <= msg.value, 'not enough money');
 
         transferFrom(ADDRESS.DefiTitan, msg.sender, tokenId);
 
@@ -242,23 +246,28 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
-        uint256 timeElapsed = block.timestamp - auction_.startTime;
-        uint256 timeElapsedInHours = timeElapsed / 3600;
+        unchecked {
+            uint256 timeElapsed = block.timestamp - auction_.startTime;
+            uint256 timeElapsedInHours = timeElapsed / 3600;
 
-        uint256 discount = auction_.discountRate * timeElapsedInHours;
-        uint256 currentPrice = auction_.startPrice - discount;
+            uint256 discount = auction_.discountRate * timeElapsedInHours;
+            uint256 currentPrice = (auction_.startPrice * 10**18) - (discount * 10**15);
 
-        return currentPrice;
+            return currentPrice;
+        }
     }
 
     function getAuctionPrice(uint8 day) external view whileAuctionIsActive returns (uint256) {
         require(1 <= day && day <= MINTING_CONFIG.NumberOFTokenForAuction, 'day is out of range');
 
-        uint256 timeElapsed = block.timestamp - Auctions[day].startTime;
-        uint256 timeElapsedInHours = timeElapsed / 3600;
+        unchecked {
+            uint256 timeElapsed = block.timestamp - Auctions[day].startTime;
+            uint256 timeElapsedInHours = timeElapsed / 3600;
 
-        uint256 discount = Auctions[day].discountRate * timeElapsedInHours;
-        return Auctions[day].startPrice - discount;
+            uint256 discount = Auctions[day].discountRate * timeElapsedInHours;
+            uint256 currentPrice = (Auctions[day].startPrice * 10**18) - (discount * 10**15);
+            return currentPrice;
+        }
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
@@ -280,7 +289,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
                 MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * (i + 1),
                 configs[i].startPrice,
                 configs[i].endPrice,
-                configs[i].discountRate / (10**3)
+                configs[i].discountRate
             );
             Auctions[i + 1] = _auction;
             _defiTitanAuctionApproval(i);
