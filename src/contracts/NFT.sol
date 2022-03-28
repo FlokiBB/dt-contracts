@@ -20,7 +20,8 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: add unit test and using this https://www.npmjs.com/package/hardhat-gas-trackooor or https://www.npmjs.com/package/hardhat-gas-reporter + dapp snapshot
 // TODO: use error instead of revert
 // TODO: return remaining msg.value in mint and auction
-contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
+//@audit-ok
+contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard { 
     using ECDSA for bytes32;
 
     // ███╗░░██╗███████╗██████╗░░█████╗░██╗░░░░░███████╗██╗░█████╗░
@@ -149,6 +150,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
     }
 
+    // State Management related functions.
     function initializer(AuctionConfig[] calldata configs) external onlyOwner {
         require(!STATE.Initialized, 'NFT: contract is already initialized');
         require(!STATE.Finished, 'NFT: contract is already finished');
@@ -159,6 +161,63 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
 
         _setRoyalties(ADDRESS.RoyaltyDistributor, MINTING_CONFIG.RoyaltyFeePercent);
     }
+
+    function revealArt(string memory ipfsCid) external onlyOwner {
+        require(!STATE.ArtIsRevealed, 'Art is already revealed');
+        uint256 len = bytes(ipfsCid).length;
+        require(len > 0, 'CID is empty');
+        IPFS.ArtCID = ipfsCid;
+        STATE.ArtIsRevealed = true;
+    }
+
+    function setPlatform(address platform_) external onlyDefiTitan {
+        ADDRESS.Platform = platform_;
+    }
+
+    function setBuyBackTreasury(address buyBackTreasury_) external onlyPlatform {
+        ADDRESS.BuyBackTreasury = buyBackTreasury_;
+    }
+
+    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintingDone {
+        UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
+    }
+
+    function startWhiteListMinting() external onlyOwner {
+        require(STATE.Initialized, 'NFT: contract is not initialized');
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(!STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting is already active');
+        STATE.WhiteListMintingIsActive = true;
+    }
+
+    function startPublicMinting() external onlyOwner {
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(!STATE.MintingIsActive, 'NFT: Minting is already active');
+        require(STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting should active before Public Minting');
+        STATE.WhiteListMintingIsActive = false;
+        STATE.MintingIsActive = true;
+    }
+
+    function finishAuction() external onlyDefiTitan {
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(STATE.Initialized, 'NFT: contract is not initialized');
+        require(STATE.AuctionIsActive, 'NFT: Auction is not active');
+        STATE.AuctionIsActive = false;
+    }
+
+    function finishMinting() external onlyDefiTitan {
+        require(!STATE.Finished, 'NFT: Minting is already finished');
+        require(STATE.MintingIsActive, 'NFT: Minting is not active');
+        require(
+            !STATE.WhiteListMintingIsActive,
+            'NFT: WhiteListMinting should not active in the middle of the Minting'
+        );
+        STATE.MintingIsActive = false;
+        STATE.AuctionIsActive = false;
+        STATE.Finished = true;
+    }
+
+
+    // Auction related functions.
 
     function buyGod(uint8 day) external payable whileAuctionIsActive {
         // buy god
@@ -235,20 +294,8 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         _approve(address(this), tokenId, ADDRESS.DefiTitan);
     }
 
-    // public minting functions
-    function publicMint(uint256 quantity) external payable whileMintingIsActive {
-        require(
-            _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MaxMintPerAddress,
-            'NFT: you have reached the maximum number of mints per address'
-        );
-        require(quantity * MINTING_CONFIG.MintPriceInWei <= msg.value, 'not enoughs ether');
-        _safeMint(msg.sender, quantity);
-        _transferEth(ADDRESS.BuyBackTreasury, msg.value);
-    }
-
-    // whitelist minting functions
-
-    function whitelistMinting(
+    // WhiteListMinting related functions.
+        function whitelistMinting(
         address addr_,
         uint8 maxQuantity_,
         uint64 quantity_,
@@ -288,6 +335,50 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
             ) == ADDRESS.WhiteListVerifier;
     }
 
+    // Minting related functions.
+
+    function publicMint(uint256 quantity) external payable whileMintingIsActive {
+        require(
+            _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MaxMintPerAddress,
+            'NFT: you have reached the maximum number of mints per address'
+        );
+        require(quantity * MINTING_CONFIG.MintPriceInWei <= msg.value, 'not enoughs ether');
+        _safeMint(msg.sender, quantity);
+        _transferEth(ADDRESS.BuyBackTreasury, msg.value);
+    }
+
+    // Token Upgradeability related functions.
+    function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
+        require(_exists(tokenId), 'token does not exist');
+        TokenOwnership memory ownership = ownershipOf(tokenId);
+        require(msg.sender == ownership.addr, 'only owner of token can upgrade token');
+        require(UpgradeRequestFeeInWei <= msg.value, 'not enoughs ether');
+
+        upgradeRequestFeeIsPaid[tokenId] = true;
+
+        _transferEth(ADDRESS.Platform, msg.value);
+        // TODO: emit a special event in here
+    }
+    function upgradeToken(
+        string memory ipfsCid,
+        uint16 tokenId,
+        bool isGodNow
+    ) external whileMintingDone onlyPlatform onlyHuman(tokenId) {
+        uint256 len = bytes(ipfsCid).length;
+        require(len > 0, 'CID is empty');
+        require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
+        upgradeRequestFeeIsPaid[tokenId] = false;
+        _UpgradedTokenCID[tokenId] = ipfsCid;
+        TokenIsUpgraded[tokenId] = true;
+        if (isGodNow) {
+            TokenIsGod[tokenId] = true;
+        }
+        // TODO: emit proper event here
+    }
+    // Utility functions.
+
+    // public minting functions
+
     // customize Token URI
     function tokenURI(uint256 tokenId_) public view override returns (string memory) {
         require(_exists(tokenId_), 'token does not exist');
@@ -305,101 +396,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         }
     }
 
-    // State Management functions.
-    function revealArt(string memory ipfsCid) external onlyOwner {
-        require(!STATE.ArtIsRevealed, 'Art is already revealed');
-        uint256 len = bytes(ipfsCid).length;
-        require(len > 0, 'CID is empty');
-        IPFS.ArtCID = ipfsCid;
-        STATE.ArtIsRevealed = true;
-    }
-
-    function setPlatform(address platform_) external onlyDefiTitan {
-        ADDRESS.Platform = platform_;
-    }
-
-    function setBuyBackTreasury(address buyBackTreasury_) external onlyPlatform {
-        ADDRESS.BuyBackTreasury = buyBackTreasury_;
-    }
-
-    function startWhiteListMinting() external onlyOwner {
-        require(STATE.Initialized, 'NFT: contract is not initialized');
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(!STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting is already active');
-        STATE.WhiteListMintingIsActive = true;
-    }
-
-    function startPublicMinting() external onlyOwner {
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(!STATE.MintingIsActive, 'NFT: Minting is already active');
-        require(STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting should active before Public Minting');
-        STATE.WhiteListMintingIsActive = false;
-        STATE.MintingIsActive = true;
-    }
-
-    function finishAuction() external onlyDefiTitan {
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(STATE.Initialized, 'NFT: contract is not initialized');
-        require(STATE.AuctionIsActive, 'NFT: Auction is not active');
-        STATE.AuctionIsActive = false;
-    }
-
-    function finishMinting() external onlyDefiTitan {
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(STATE.MintingIsActive, 'NFT: Minting is not active');
-        require(
-            !STATE.WhiteListMintingIsActive,
-            'NFT: WhiteListMinting should not active in the middle of the Minting'
-        );
-        STATE.MintingIsActive = false;
-        STATE.AuctionIsActive = false;
-        STATE.Finished = true;
-    }
-
-    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintingDone {
-        UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
-    }
-
-    // utility functions
-
-    function _transferEth(address to_, uint256 amount) private {
-        address payable to = payable(to_);
-        (bool sent, ) = to.call{value: amount}('');
-        require(sent, 'Failed to send Ether');
-    }
-
-    // Token Upgradeability management functions
-
-    function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
-        require(_exists(tokenId), 'token does not exist');
-        TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(msg.sender == ownership.addr, 'only owner of token can upgrade token');
-        require(UpgradeRequestFeeInWei <= msg.value, 'not enoughs ether');
-
-        upgradeRequestFeeIsPaid[tokenId] = true;
-
-        _transferEth(ADDRESS.Platform, msg.value);
-        // TODO: emit a special event in here
-    }
-
-    function upgradeToken(
-        string memory ipfsCid,
-        uint16 tokenId,
-        bool isGodNow
-    ) external whileMintingDone onlyPlatform onlyHuman(tokenId) {
-        uint256 len = bytes(ipfsCid).length;
-        require(len > 0, 'CID is empty');
-        require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
-        upgradeRequestFeeIsPaid[tokenId] = false;
-        _UpgradedTokenCID[tokenId] = ipfsCid;
-        TokenIsUpgraded[tokenId] = true;
-        if (isGodNow) {
-            TokenIsGod[tokenId] = true;
-        }
-        // TODO: emit proper event here
-    }
-
-    // Token BuyBack management functions
+    // Token BuyBack related functions.
     function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory ownership = ownershipOf(tokenId);
@@ -409,7 +406,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         // TODO: emit proper event here
     }
 
-    // EIP 2981 functions
+    // EIP-2981 related functions.
 
     /// @dev Sets token royalties
     /// @param recipient recipient of the royalties
@@ -422,6 +419,14 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         RoyaltyInfo memory royalties = _royalties;
         receiver = royalties.recipient;
         royaltyAmount = (value * royalties.percent) / 100;
+    }
+
+    // utility functions
+
+    function _transferEth(address to_, uint256 amount) private {
+        address payable to = payable(to_);
+        (bool sent, ) = to.call{value: amount}('');
+        require(sent, 'Failed to send Ether');
     }
 
     // ███████╗██╗░░░░░░█████╗░██╗░░██╗██╗  ██████╗░██████╗░
