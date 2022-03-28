@@ -165,6 +165,8 @@ describe('NFT', function () {
         console.log(await NFTContract.getAuctionPrice(i+1));
         expect(auction.START_PRICE).to.equal(auctionConfig[i].START_PRICE);
         expect(auction.END_PRICE).to.equal(auctionConfig[i].END_PRICE);
+        expect(auction.START_TIME).to.equal(AuctionStartTime_ + i * AuctionDuration_);
+        expect(auction.EXPIRE_AT).to.equal(AuctionStartTime_ + (i + 1) * AuctionDuration_);
       }
     });
 
