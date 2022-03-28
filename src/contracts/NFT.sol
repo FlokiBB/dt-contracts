@@ -96,10 +96,9 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     // Events
-    event UpgradeRequestPayment(uint16  _token, uint256  _value);
+    event UpgradeRequestPayment(uint16 _token, uint256 _value);
 
-
-    // State variables 
+    // State variables
     uint16 public immutable MAX_SUPPLY;
     uint256 public UPGRADE_REQUEST_FEE_IN_WEI;
     ContractState public STATE;
@@ -231,7 +230,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         STATE.FINISHED = true;
     }
 
-
     // Auction related functions.
 
     function buyAGod(uint8 day) external payable whileAuctionIsActive {
@@ -257,10 +255,10 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     }
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
-        if(block.timestamp < auction_.START_TIME) {
+        if (block.timestamp < auction_.START_TIME) {
             return auction_.START_PRICE;
         }
-        if(block.timestamp > auction_.EXPIRE_AT) {
+        if (block.timestamp > auction_.EXPIRE_AT) {
             return auction_.END_PRICE;
         }
         uint256 elapsedTime = block.timestamp - auction_.START_TIME;
@@ -280,7 +278,10 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
             _totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY,
             'not enough space for new auctions'
         );
-        require(configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'configs must be the same length as count');
+        require(
+            configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION,
+            'configs must be the same length as count'
+        );
 
         _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
 
@@ -373,6 +374,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         _transferEth(ADDRESS.PLATFORM, msg.value);
         emit UpgradeRequestPayment(tokenId, msg.value);
     }
+
     function upgradeToken(
         string memory ipfsCid,
         uint16 tokenId,
