@@ -11,7 +11,6 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: receive and fall back
 // TODO: good require message
 // TODO: proper name for functions and variables
-// TODO: add proper Event to functions
 // TODO: set getter and setter for variables if needed
 // ToDo: attention to eip165
 // TODO: check 2982 correctness of implementation
@@ -19,7 +18,11 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
 // TODO: use error instead of revert(it help to deployment cost but there is trade off)
 // TODO: return remaining msg.value in mint and auction
-// TODO: write auction based on step reduced and wei
+// @audit-ok
+// @audit
+// TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
+// TODO: set the correct name for NFT after Team Decide and change the Asci Art
+// TODO: think about future and needed event in that time
 contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     using ECDSA for bytes32;
 
@@ -29,106 +32,118 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     // ██║╚████║██╔══╝░░██╔═══╝░██║░░██║██║░░░░░██╔══╝░░██║██╔══██║
     // ██║░╚███║███████╗██║░░░░░╚█████╔╝███████╗███████╗██║██║░░██║
     // ╚═╝░░╚══╝╚══════╝╚═╝░░░░░░╚════╝░╚══════╝╚══════╝╚═╝╚═╝░░╚═╝
+
+    // Structs
     struct ContractState {
-        bool Initialized;
-        bool AuctionIsActive;
-        bool WhiteListMintingIsActive;
-        bool MintingIsActive;
-        bool ArtIsRevealed;
-        bool Finished;
+        bool INITIALIZED;
+        bool AUCTION_IS_ACTIVE;
+        bool WHITE_LIST_MINTING_IS_ACTIVE;
+        bool MINTING_IS_ACTIVE;
+        bool ART_IS_REVEALED;
+        bool FINISHED;
     }
 
     struct ContractAddresses {
-        address Owner;
-        address Platform;
-        address DefiTitan;
-        address BuyBackTreasury;
-        address WhiteListVerifier;
-        address RoyaltyDistributor;
+        address OWNER;
+        address PLATFORM;
+        address DECENTRAL_TITAN;
+        address BUY_BACK_TREASURY_CONTRACT;
+        address WHITE_LIST_VERIFIER;
+        address ROYALTY_DISTRIBUTOR_CONTRACT;
     }
 
     struct ContractIPFS {
-        string GodCID;
-        string NotRevealedArtCID;
-        string ArtCID;
+        string GOD_CID;
+        string NOT_REVEALED_ART_CID;
+        string ART_CID;
     }
 
     struct ContactMintConfig {
-        uint256 MintPriceInWei;
-        uint16 MaxMintPerAddress;
-        uint256 AuctionStartTime;
-        uint256 AuctionDuration;
-        uint8 NumberOFTokenForAuction;
-        uint8 RoyaltyFeePercent;
+        uint256 MINT_PRICE_IN_WEI;
+        uint16 MAX_MINT_PER_ADDRESS;
+        uint256 AUCTION_START_TIME; // epoch time
+        uint256 AUCTION_DURATION; // in seconds
+        uint8 NUMBER_OF_TOKEN_FOR_AUCTION;
+        uint8 ROYALTY_FEE_PERCENT;
     }
 
     struct AuctionConfig {
-        uint256 startPrice; // in ether
-        uint256 endPrice; // in ether
-        uint256 discountRate; // amount of the discount per unit of auction duration * 1000
+        uint256 START_PRICE; // in wei
+        uint256 END_PRICE; // in wei
+        uint256 AUCTION_DROP_INTERVAL; // in seconds
+        uint256 AUCTION_DROP_PER_STEP; // in wei
     }
     struct Auction {
-        uint8 tokenID;
-        uint256 startTime;
-        uint256 expiresAt;
-        uint256 startPrice;
-        uint256 endPrice;
-        uint256 discountRate;
+        uint8 TOKEN_ID;
+        uint256 START_TIME; // epoch time
+        uint256 EXPIRE_AT; // epoch time
+        uint256 START_PRICE; // in wei
+        uint256 END_PRICE; // in wei
+        uint256 AUCTION_DROP_INTERVAL; // in seconds
+        uint256 AUCTION_DROP_PER_STEP; // in wei
+        bool IS_SOLD;
     }
 
     struct RoyaltyInfo {
-        address recipient;
-        uint8 percent;
+        address RECIPIENT;
+        uint8 PERCENT;
     }
 
+    // Enums
     enum WhiteListType {
-        Normal,
-        Royal
+        NORMAL,
+        ROYAL
     }
 
-    uint16 public immutable MaxSupply;
-    uint256 public UpgradeRequestFeeInWei;
+    // Events
+    event UpgradeRequestPayment(uint16 _token, uint256 _value);
+
+    // State variables
+    uint16 public immutable MAX_SUPPLY;
+    uint256 public UPGRADE_REQUEST_FEE_IN_WEI;
     ContractState public STATE;
     ContractAddresses public ADDRESS;
     ContractIPFS public IPFS;
     ContactMintConfig public MINTING_CONFIG;
-    RoyaltyInfo private _royalties;
+    RoyaltyInfo private _ROYALTIES;
 
-    mapping(uint16 => bool) public TokenIsUpgraded;
-    mapping(uint16 => string) private _UpgradedTokenCID;
-    mapping(uint16 => bool) public TokenIsGod;
-    mapping(uint8 => Auction) public Auctions;
-    mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
+    // Mappings
+    mapping(uint16 => bool) public TOKEN_IS_UPGRADED;
+    mapping(uint16 => string) private _UPGRADED_TOKEN_CID;
+    mapping(uint16 => bool) public TOKEN_IS_GOD;
+    mapping(uint8 => Auction) public AUCTIONS;
+    mapping(uint256 => bool) public UPGRADE_REQUEST_FEE_IS_PAID;
 
+    // Modifires
     modifier whileAuctionIsActive() {
-        require(STATE.AuctionIsActive, 'Auction is not active');
+        require(STATE.AUCTION_IS_ACTIVE, 'Auction is not active');
         _;
     }
     modifier whileMintingIsActive() {
-        require(STATE.MintingIsActive, 'Minting is not active');
+        require(STATE.MINTING_IS_ACTIVE, 'Minting is not active');
         _;
     }
     modifier whileWhiteListMintingIsActive() {
-        require(STATE.WhiteListMintingIsActive, 'WhiteListMinting is not active');
+        require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'WhiteListMinting is not active');
         _;
     }
     modifier whileMintingDone() {
-        require(STATE.Finished, 'Minting is not finished');
-        require(STATE.Initialized, 'Contract is not initialized');
+        require(STATE.FINISHED, 'Minting is not finished');
+        require(STATE.INITIALIZED, 'Contract is not initialized');
         _;
     }
 
     modifier onlyPlatform() {
-        require(ADDRESS.Platform == _msgSender(), 'Only platform address can call this function');
+        require(ADDRESS.PLATFORM == _msgSender(), 'Only platform address can call this function');
         _;
     }
-    modifier onlyDefiTitan() {
-        require(ADDRESS.DefiTitan == _msgSender(), 'Only defi titan address can call this function');
+    modifier onlyDecentralTitan() {
+        require(ADDRESS.DECENTRAL_TITAN == _msgSender(), 'Only defi titan address can call this function');
         _;
     }
 
     modifier onlyHuman(uint16 tokenId_) {
-        require(!TokenIsGod[tokenId_], 'this function is only functional for humans');
+        require(!TOKEN_IS_GOD[tokenId_], 'this function is only functional for humans');
         _;
     }
 
@@ -139,120 +154,164 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         string memory notRevealedArtCID_,
         ContactMintConfig memory mintConfig_,
         uint256 upgradeRequestFeeInWei_
-    ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') NepoleiaOwnable(addresses_.Owner) {
-        MaxSupply = maxSupply_;
+    ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') NepoleiaOwnable(addresses_.OWNER) {
+        MAX_SUPPLY = maxSupply_;
         STATE = ContractState(false, false, false, false, false, false);
         ADDRESS = addresses_;
-        IPFS.GodCID = godCID_;
-        IPFS.NotRevealedArtCID = notRevealedArtCID_;
+        IPFS.GOD_CID = godCID_;
+        IPFS.NOT_REVEALED_ART_CID = notRevealedArtCID_;
         MINTING_CONFIG = mintConfig_;
-        UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
+        UPGRADE_REQUEST_FEE_IN_WEI = upgradeRequestFeeInWei_;
     }
 
+    // State Management related functions.
     function initializer(AuctionConfig[] calldata configs) external onlyOwner {
-        require(!STATE.Initialized, 'NFT: contract is already initialized');
-        require(!STATE.Finished, 'NFT: contract is already finished');
-        require(!STATE.AuctionIsActive, 'NFT: auction is already active');
-        STATE.Initialized = true;
+        require(!STATE.INITIALIZED, 'NFT: contract is already initialized');
+        require(!STATE.FINISHED, 'NFT: contract is already finished');
+        require(!STATE.AUCTION_IS_ACTIVE, 'NFT: auction is already active');
+        STATE.INITIALIZED = true;
         _setupGodAuction(configs);
-        STATE.AuctionIsActive = true;
+        STATE.AUCTION_IS_ACTIVE = true;
 
-        _setRoyalties(ADDRESS.RoyaltyDistributor, MINTING_CONFIG.RoyaltyFeePercent);
+        _setRoyalties(ADDRESS.ROYALTY_DISTRIBUTOR_CONTRACT, MINTING_CONFIG.ROYALTY_FEE_PERCENT);
     }
 
-    function buyGod(uint8 day) external payable whileAuctionIsActive {
+    function revealArt(string memory ipfsCid) external onlyOwner {
+        require(!STATE.ART_IS_REVEALED, 'Art is already revealed');
+        uint256 len = bytes(ipfsCid).length;
+        require(len > 0, 'CID is empty');
+        IPFS.ART_CID = ipfsCid;
+        STATE.ART_IS_REVEALED = true;
+    }
+
+    function setPlatform(address platform_) external onlyDecentralTitan {
+        ADDRESS.PLATFORM = platform_;
+    }
+
+    function setBuyBackTreasury(address buyBackTreasury_) external onlyPlatform {
+        ADDRESS.BUY_BACK_TREASURY_CONTRACT = buyBackTreasury_;
+    }
+
+    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDecentralTitan whileMintingDone {
+        UPGRADE_REQUEST_FEE_IN_WEI = upgradeRequestFeeInWei_;
+    }
+
+    function startWhiteListMinting() external onlyOwner {
+        require(STATE.INITIALIZED, 'NFT: contract is not initialized');
+        require(!STATE.FINISHED, 'NFT: Minting is already finished');
+        require(!STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'NFT: WhiteListMinting is already active');
+        STATE.WHITE_LIST_MINTING_IS_ACTIVE = true;
+    }
+
+    function startPublicMinting() external onlyOwner {
+        require(!STATE.FINISHED, 'NFT: Minting is already finished');
+        require(!STATE.MINTING_IS_ACTIVE, 'NFT: Minting is already active');
+        require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'NFT: WhiteListMinting should active before Public Minting');
+        STATE.WHITE_LIST_MINTING_IS_ACTIVE = false;
+        STATE.MINTING_IS_ACTIVE = true;
+    }
+
+    function finishAuction() external onlyDecentralTitan {
+        require(!STATE.FINISHED, 'NFT: Minting is already finished');
+        require(STATE.INITIALIZED, 'NFT: contract is not initialized');
+        require(STATE.AUCTION_IS_ACTIVE, 'NFT: Auction is not active');
+        STATE.AUCTION_IS_ACTIVE = false;
+    }
+
+    function finishMinting() external onlyDecentralTitan {
+        require(!STATE.FINISHED, 'NFT: Minting is already finished');
+        require(STATE.MINTING_IS_ACTIVE, 'NFT: Minting is not active');
+        require(
+            !STATE.WHITE_LIST_MINTING_IS_ACTIVE,
+            'NFT: WhiteListMinting should not active in the middle of the Minting'
+        );
+        STATE.MINTING_IS_ACTIVE = false;
+        STATE.AUCTION_IS_ACTIVE = false;
+        STATE.FINISHED = true;
+    }
+
+    // Auction related functions.
+
+    function buyAGod(uint8 day) external payable whileAuctionIsActive {
         // buy god
         // require contract in the state of active auction
-        require(1 <= day && day <= MINTING_CONFIG.NumberOFTokenForAuction, 'day is out of range');
-        require(Auctions[day].startTime <= block.timestamp, 'auction is not started yet');
-        require(Auctions[day].expiresAt >= block.timestamp, 'auction is expired');
+        require(1 <= day && day <= MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'day is out of range');
+        require(AUCTIONS[day].START_TIME <= block.timestamp, 'auction is not started yet');
+        require(AUCTIONS[day].EXPIRE_AT >= block.timestamp, 'auction is expired');
 
-        uint8 tokenId = day - 1;
-        TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(ownership.addr == ADDRESS.DefiTitan, 'auction is has ended');
+        Auction memory auction = AUCTIONS[day];
+        TokenOwnership memory ownership = ownershipOf(auction.TOKEN_ID);
+        require(!auction.IS_SOLD, 'auction is already sold');
+        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'auction is not owned by Decentral Titan');
 
-        Auction memory auction = Auctions[day];
         uint256 currentPrice = _getAuctionPrice(auction);
 
-        require(currentPrice >= auction.endPrice, 'auction has ended because it receive to base price');
-        require(currentPrice <= msg.value, 'not enough money');
+        require(currentPrice <= auction.END_PRICE, 'auction has ended because it receive to base price');
+        require(currentPrice <= msg.value, 'not enough ether');
 
-        transferFrom(ADDRESS.DefiTitan, msg.sender, tokenId);
+        transferFrom(ADDRESS.DECENTRAL_TITAN, msg.sender, auction.TOKEN_ID);
 
-        _transferEth(ADDRESS.DefiTitan, msg.value);
+        _transferEth(ADDRESS.DECENTRAL_TITAN, msg.value);
     }
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
-        unchecked {
-            uint256 timeElapsed = block.timestamp - auction_.startTime;
-            uint256 timeElapsedInHours = timeElapsed / 3600;
-
-            uint256 discount = auction_.discountRate * timeElapsedInHours;
-            uint256 currentPrice = (auction_.startPrice * 10**18) - (discount * 10**15);
-
-            return currentPrice;
+        if (block.timestamp < auction_.START_TIME) {
+            return auction_.START_PRICE;
         }
+        if (block.timestamp > auction_.EXPIRE_AT) {
+            return auction_.END_PRICE;
+        }
+        uint256 elapsedTime = block.timestamp - auction_.START_TIME;
+        uint256 steps = elapsedTime / auction_.AUCTION_DROP_INTERVAL;
+        return auction_.START_PRICE - (steps * auction_.AUCTION_DROP_PER_STEP);
     }
 
     function getAuctionPrice(uint8 day) external view whileAuctionIsActive returns (uint256) {
-        require(1 <= day && day <= MINTING_CONFIG.NumberOFTokenForAuction, 'day is out of range');
+        require(1 <= day && day <= MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'day is out of range');
 
-        unchecked {
-            uint256 timeElapsed = block.timestamp - Auctions[day].startTime;
-            uint256 timeElapsedInHours = timeElapsed / 3600;
-
-            uint256 discount = Auctions[day].discountRate * timeElapsedInHours;
-            uint256 currentPrice = (Auctions[day].startPrice * 10**18) - (discount * 10**15);
-            return currentPrice;
-        }
+        Auction memory auction = AUCTIONS[day];
+        return _getAuctionPrice(auction);
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
         require(
-            _totalMinted() + MINTING_CONFIG.NumberOFTokenForAuction <= MaxSupply,
+            _totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY,
             'not enough space for new auctions'
         );
-        require(configs.length == MINTING_CONFIG.NumberOFTokenForAuction, 'configs must be the same length as count');
+        require(
+            configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION,
+            'configs must be the same length as count'
+        );
 
-        _safeMint(ADDRESS.DefiTitan, MINTING_CONFIG.NumberOFTokenForAuction);
+        _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
 
         // we need set first token id to the token sell in auction for CID availability.
-        require(_totalMinted() == MINTING_CONFIG.NumberOFTokenForAuction, 'bad initialization of contract');
+        require(_totalMinted() == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'bad initialization of contract');
 
-        for (uint8 i = 0; i < MINTING_CONFIG.NumberOFTokenForAuction; i++) {
+        for (uint8 i = 0; i < MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION; i++) {
             Auction memory _auction = Auction(
                 i,
-                MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * i,
-                MINTING_CONFIG.AuctionStartTime + MINTING_CONFIG.AuctionDuration * (i + 1),
-                configs[i].startPrice,
-                configs[i].endPrice,
-                configs[i].discountRate
+                MINTING_CONFIG.AUCTION_START_TIME + MINTING_CONFIG.AUCTION_DURATION * i,
+                MINTING_CONFIG.AUCTION_START_TIME + MINTING_CONFIG.AUCTION_DURATION * (i + 1),
+                configs[i].START_PRICE,
+                configs[i].END_PRICE,
+                configs[i].AUCTION_DROP_INTERVAL,
+                configs[i].AUCTION_DROP_PER_STEP,
+                false
             );
-            Auctions[i + 1] = _auction;
+            AUCTIONS[i + 1] = _auction;
             _defiTitanAuctionApproval(i);
-            TokenIsGod[i] = true;
+            TOKEN_IS_GOD[i] = true;
         }
     }
 
     function _defiTitanAuctionApproval(uint8 tokenId) private {
         TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(ownership.addr == ADDRESS.DefiTitan, 'this is work only for defi titan assets');
-        _approve(address(this), tokenId, ADDRESS.DefiTitan);
+        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'this is work only for defi titan assets');
+        _approve(address(this), tokenId, ADDRESS.DECENTRAL_TITAN);
     }
 
-    // public minting functions
-    function publicMint(uint256 quantity) external payable whileMintingIsActive {
-        require(
-            _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MaxMintPerAddress,
-            'NFT: you have reached the maximum number of mints per address'
-        );
-        require(quantity * MINTING_CONFIG.MintPriceInWei <= msg.value, 'not enoughs ether');
-        _safeMint(msg.sender, quantity);
-        _transferEth(ADDRESS.BuyBackTreasury, msg.value);
-    }
-
-    // whitelist minting functions
-
+    // WhiteListMinting related functions.
     function whitelistMinting(
         address addr_,
         uint8 maxQuantity_,
@@ -261,22 +320,22 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         bytes calldata sig
     ) external payable whileWhiteListMintingIsActive {
         require(isWhitelisted(addr_, maxQuantity_, whiteListType_, sig), 'signature is not valid');
-        require(_totalMinted() + quantity_ <= MaxSupply, 'Max supply is reached');
+        require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Max supply is reached');
 
         uint64 _aux = _getAux(addr_);
 
         require(_aux + quantity_ <= maxQuantity_, 'Quantity is not valid');
 
-        if (whiteListType_ == WhiteListType.Royal) {
+        if (whiteListType_ == WhiteListType.ROYAL) {
             _setAux(addr_, _aux + quantity_);
             _safeMint(addr_, quantity_);
         } else {
-            require(quantity_ * MINTING_CONFIG.MintPriceInWei <= msg.value, 'Not enoughs ether.');
+            require(quantity_ * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'Not enoughs ether.');
             _setAux(addr_, _aux + quantity_);
             _safeMint(addr_, quantity_);
         }
         if (msg.value > 0) {
-            _transferEth(ADDRESS.BuyBackTreasury, msg.value);
+            _transferEth(ADDRESS.BUY_BACK_TREASURY_CONTRACT, msg.value);
         }
     }
 
@@ -290,101 +349,30 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
             ECDSA.recover(
                 keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)).toEthSignedMessageHash(),
                 sig_
-            ) == ADDRESS.WhiteListVerifier;
+            ) == ADDRESS.WHITE_LIST_VERIFIER;
     }
 
-    // customize Token URI
-    function tokenURI(uint256 tokenId_) public view override returns (string memory) {
-        require(_exists(tokenId_), 'token does not exist');
+    // Minting related functions.
 
-        uint16 id = uint16(tokenId_);
-
-        if (TokenIsUpgraded[id]) {
-            return string(abi.encodePacked(_UpgradedTokenCID[id]));
-        } else if (TokenIsGod[id]) {
-            return string(abi.encodePacked(IPFS.GodCID, Strings.toString(id)));
-        } else if (STATE.ArtIsRevealed) {
-            return string(abi.encodePacked(IPFS.ArtCID, Strings.toString(id)));
-        } else {
-            return string(abi.encodePacked(IPFS.NotRevealedArtCID, Strings.toString(id)));
-        }
-    }
-
-    // State Management functions.
-    function revealArt(string memory ipfsCid) external onlyOwner {
-        require(!STATE.ArtIsRevealed, 'Art is already revealed');
-        uint256 len = bytes(ipfsCid).length;
-        require(len > 0, 'CID is empty');
-        IPFS.ArtCID = ipfsCid;
-        STATE.ArtIsRevealed = true;
-    }
-
-    function setPlatform(address platform_) external onlyDefiTitan {
-        ADDRESS.Platform = platform_;
-    }
-
-    function setBuyBackTreasury(address buyBackTreasury_) external onlyPlatform {
-        ADDRESS.BuyBackTreasury = buyBackTreasury_;
-    }
-
-    function startWhiteListMinting() external onlyOwner {
-        require(STATE.Initialized, 'NFT: contract is not initialized');
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(!STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting is already active');
-        STATE.WhiteListMintingIsActive = true;
-    }
-
-    function startPublicMinting() external onlyOwner {
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(!STATE.MintingIsActive, 'NFT: Minting is already active');
-        require(STATE.WhiteListMintingIsActive, 'NFT: WhiteListMinting should active before Public Minting');
-        STATE.WhiteListMintingIsActive = false;
-        STATE.MintingIsActive = true;
-    }
-
-    function finishAuction() external onlyDefiTitan {
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(STATE.Initialized, 'NFT: contract is not initialized');
-        require(STATE.AuctionIsActive, 'NFT: Auction is not active');
-        STATE.AuctionIsActive = false;
-    }
-
-    function finishMinting() external onlyDefiTitan {
-        require(!STATE.Finished, 'NFT: Minting is already finished');
-        require(STATE.MintingIsActive, 'NFT: Minting is not active');
+    function publicMint(uint256 quantity) external payable whileMintingIsActive {
         require(
-            !STATE.WhiteListMintingIsActive,
-            'NFT: WhiteListMinting should not active in the middle of the Minting'
+            _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MAX_MINT_PER_ADDRESS,
+            'NFT: you reached the maximum number of mints per address'
         );
-        STATE.MintingIsActive = false;
-        STATE.AuctionIsActive = false;
-        STATE.Finished = true;
+        require(quantity * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'not enoughs ether');
+        _safeMint(msg.sender, quantity);
+        _transferEth(ADDRESS.BUY_BACK_TREASURY_CONTRACT, msg.value);
     }
 
-    function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDefiTitan whileMintingDone {
-        UpgradeRequestFeeInWei = upgradeRequestFeeInWei_;
-    }
-
-    // utility functions
-
-    function _transferEth(address to_, uint256 amount) private {
-        address payable to = payable(to_);
-        (bool sent, ) = to.call{value: amount}('');
-        require(sent, 'Failed to send Ether');
-    }
-
-    // Token Upgradeability management functions
-
+    // Token Upgradeability related functions.
     function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
         require(_exists(tokenId), 'token does not exist');
-        TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(msg.sender == ownership.addr, 'only owner of token can upgrade token');
-        require(UpgradeRequestFeeInWei <= msg.value, 'not enoughs ether');
+        require(UPGRADE_REQUEST_FEE_IN_WEI <= msg.value, 'not enoughs ether');
 
-        upgradeRequestFeeIsPaid[tokenId] = true;
+        UPGRADE_REQUEST_FEE_IS_PAID[tokenId] = true;
 
-        _transferEth(ADDRESS.Platform, msg.value);
-        // TODO: emit a special event in here
+        _transferEth(ADDRESS.PLATFORM, msg.value);
+        emit UpgradeRequestPayment(tokenId, msg.value);
     }
 
     function upgradeToken(
@@ -394,39 +382,61 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     ) external whileMintingDone onlyPlatform onlyHuman(tokenId) {
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
-        require(upgradeRequestFeeIsPaid[tokenId], 'upgrade fee is not paid');
-        upgradeRequestFeeIsPaid[tokenId] = false;
-        _UpgradedTokenCID[tokenId] = ipfsCid;
-        TokenIsUpgraded[tokenId] = true;
+        require(UPGRADE_REQUEST_FEE_IS_PAID[tokenId], 'upgrade fee is not paid');
+        UPGRADE_REQUEST_FEE_IS_PAID[tokenId] = false;
+        _UPGRADED_TOKEN_CID[tokenId] = ipfsCid;
+        TOKEN_IS_UPGRADED[tokenId] = true;
         if (isGodNow) {
-            TokenIsGod[tokenId] = true;
+            TOKEN_IS_GOD[tokenId] = true;
         }
-        // TODO: emit proper event here
     }
 
-    // Token BuyBack management functions
+    // customize Token URI
+    function tokenURI(uint256 tokenId_) public view override returns (string memory) {
+        require(_exists(tokenId_), 'token does not exist');
+
+        uint16 id = uint16(tokenId_);
+
+        if (TOKEN_IS_UPGRADED[id]) {
+            return string(abi.encodePacked(_UPGRADED_TOKEN_CID[id]));
+        } else if (TOKEN_IS_GOD[id]) {
+            return string(abi.encodePacked(IPFS.GOD_CID, Strings.toString(id)));
+        } else if (STATE.ART_IS_REVEALED) {
+            return string(abi.encodePacked(IPFS.ART_CID, Strings.toString(id)));
+        } else {
+            return string(abi.encodePacked(IPFS.NOT_REVEALED_ART_CID, Strings.toString(id)));
+        }
+    }
+
+    // Token BuyBack related functions.
     function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
         require(_exists(tokenId), 'token does not exist');
         TokenOwnership memory ownership = ownershipOf(tokenId);
         require(msg.sender == ownership.addr, 'only owner of token can buy back token');
         _burn(tokenId);
         // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender
-        // TODO: emit proper event here
     }
 
-    // EIP 2981 functions
+    // EIP-2981 related functions.
 
     /// @dev Sets token royalties
     /// @param recipient recipient of the royalties
     /// @param value percentage of the royalties
     function _setRoyalties(address recipient, uint8 value) internal {
-        _royalties = RoyaltyInfo(recipient, uint8(value));
+        _ROYALTIES = RoyaltyInfo(recipient, uint8(value));
     }
 
     function royaltyInfo(uint256, uint256 value) external view returns (address receiver, uint256 royaltyAmount) {
-        RoyaltyInfo memory royalties = _royalties;
-        receiver = royalties.recipient;
-        royaltyAmount = (value * royalties.percent) / 100;
+        receiver = _ROYALTIES.RECIPIENT;
+        royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
+    }
+
+    // utility functions
+
+    function _transferEth(address to_, uint256 amount) private {
+        address payable to = payable(to_);
+        (bool sent, ) = to.call{value: amount}('');
+        require(sent, 'Failed to send Ether');
     }
 
     // ███████╗██╗░░░░░░█████╗░██╗░░██╗██╗  ██████╗░██████╗░

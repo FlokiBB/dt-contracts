@@ -28,17 +28,20 @@ describe('NFT', function () {
 
   const auctionConfig = [
     {
-      startPrice: 50,
-      endPrice: 5,
-      discountRate: 1875,
+      START_PRICE: 50,
+      END_PRICE: 5,
+      AUCTION_DROP_INTERVAL: 1875,
+      AUCTION_DROP_PER_STEP: 25,
     }, {
-      startPrice: 5,
-      endPrice: 2,
-      discountRate: 125,
+      START_PRICE: 5,
+      END_PRICE: 2,
+      AUCTION_DROP_INTERVAL: 375,
+      AUCTION_DROP_PER_STEP: 125,
     }, {
-      startPrice: 10,
-      endPrice: 1,
-      discountRate: 375,
+      START_PRICE: 10,
+      END_PRICE: 1,
+      AUCTION_DROP_INTERVAL: 375,
+      AUCTION_DROP_PER_STEP: 5,
     }];
 
   beforeEach(async () => {
@@ -53,23 +56,23 @@ describe('NFT', function () {
     NFTContract = (await Contract.deploy(
       maxSupply_,
       {
-        Owner: ownerAddress,
-        Platform: platformMultisigAddress,
-        DefiTitan: defiTitanAddress,
-        BuyBackTreasury: buyBackTreasuryContractAddress,
-        WhiteListVerifier: whiteListVerifierAddress,
-        RoyaltyDistributor: royaltyDistributorAddress,
+        OWNER: ownerAddress,
+        PLATFORM: platformMultisigAddress,
+        DECENTRAL_TITAN: defiTitanAddress,
+        BUY_BACK_TREASURY_CONTRACT: buyBackTreasuryContractAddress,
+        WHITE_LIST_VERIFIER: whiteListVerifierAddress,
+        ROYALTY_DISTRIBUTOR_CONTRACT: royaltyDistributorAddress,
 
       },
       godCID_,
       notRevealedArtCID_,
       {
-        MintPriceInWei: MintPriceInWei_,
-        MaxMintPerAddress: MaxMintPerAddress_,
-        AuctionStartTime: AuctionStartTime_,
-        AuctionDuration: AuctionDuration_,
-        NumberOFTokenForAuction: NumberOFTokenForAuction_,
-        RoyaltyFeePercent: RoyaltyFeePercent_,
+        MINT_PRICE_IN_WEI: MintPriceInWei_,
+        MAX_MINT_PER_ADDRESS: MaxMintPerAddress_,
+        AUCTION_START_TIME: AuctionStartTime_,
+        AUCTION_DURATION: AuctionDuration_,
+        NUMBER_OF_TOKEN_FOR_AUCTION: NumberOFTokenForAuction_,
+        ROYALTY_FEE_PERCENT: RoyaltyFeePercent_,
       },
       upgradeRequestFeeInWei_
     )) as NFT;
@@ -78,49 +81,49 @@ describe('NFT', function () {
   // TODO: check name and symbol
   describe('#constructor', () => {
     it('should have correct max supply', async () => {
-      const maxSupply = await NFTContract.MaxSupply();
+      const maxSupply = await NFTContract.MAX_SUPPLY();
       expect(maxSupply).to.equal(maxSupply_);
     });
 
     it('should have correct owner address', async () => {
       const OwnableOwner = await NFTContract.owner();
-      const AddressesOwner = (await NFTContract.ADDRESS()).Owner
+      const AddressesOwner = (await NFTContract.ADDRESS()).OWNER
       expect(OwnableOwner).to.equal(ownerAddress);
       expect(AddressesOwner).to.equal(ownerAddress);
     });
 
     it('should have correct platform multisig address', async () => {
-      const platformMultisig = (await NFTContract.ADDRESS()).Platform;
+      const platformMultisig = (await NFTContract.ADDRESS()).PLATFORM;
       expect(platformMultisig).to.equal(platformMultisigAddress);
     });
 
     it('should have correct defi titan address', async () => {
-      const defiTitan = (await NFTContract.ADDRESS()).DefiTitan;
+      const defiTitan = (await NFTContract.ADDRESS()).DECENTRAL_TITAN;
       expect(defiTitan).to.equal(defiTitanAddress);
     });
 
     it('should have correct buy back treasury contract address', async () => {
-      const buyBackTreasuryContract = (await NFTContract.ADDRESS()).BuyBackTreasury;
+      const buyBackTreasuryContract = (await NFTContract.ADDRESS()).BUY_BACK_TREASURY_CONTRACT;
       expect(buyBackTreasuryContract).to.equal(buyBackTreasuryContractAddress);
     });
 
     it('should have correct white list verifier address', async () => {
-      const whiteListVerifier = (await NFTContract.ADDRESS()).WhiteListVerifier;
+      const whiteListVerifier = (await NFTContract.ADDRESS()).WHITE_LIST_VERIFIER;
       expect(whiteListVerifier).to.equal(whiteListVerifierAddress);
     });
 
     it('should have correct royalty distributor address', async () => {
-      const royaltyDistributor = (await NFTContract.ADDRESS()).RoyaltyDistributor;
+      const royaltyDistributor = (await NFTContract.ADDRESS()).ROYALTY_DISTRIBUTOR_CONTRACT;
       expect(royaltyDistributor).to.equal(royaltyDistributorAddress);
     });
 
     it('should have correct god cid', async () => {
-      const godCID = (await NFTContract.IPFS()).GodCID;
+      const godCID = (await NFTContract.IPFS()).GOD_CID;
       expect(godCID).to.equal(godCID_);
     });
 
     it('should have correct not revealed art cid', async () => {
-      const notRevealedArtCID = (await NFTContract.IPFS()).NotRevealedArtCID;
+      const notRevealedArtCID = (await NFTContract.IPFS()).NOT_REVEALED_ART_CID;
       expect(notRevealedArtCID).to.equal(notRevealedArtCID_);
     });
   });
@@ -151,18 +154,19 @@ describe('NFT', function () {
 
     it('maxSupply should be equal to number of token in auction in this stage', async () => {
       const currentSupply = await NFTContract.totalSupply();
-      const numberOfTokenInAuction = (await NFTContract.MINTING_CONFIG()).NumberOFTokenForAuction;
+      const numberOfTokenInAuction = (await NFTContract.MINTING_CONFIG()).NUMBER_OF_TOKEN_FOR_AUCTION;
       expect(currentSupply).to.equal(numberOfTokenInAuction);
     });
 
     it('should set auction config correctly', async () => {
       for (let i = 0; i < NumberOFTokenForAuction_; i++) {
-        const auction = await NFTContract.Auctions(i+1);
+        const auction = await NFTContract.AUCTIONS(i+1);
         console.log(auction);
         console.log(await NFTContract.getAuctionPrice(i+1));
-        expect(auction.startPrice).to.equal(auctionConfig[i].startPrice);
-        expect(auction.endPrice).to.equal(auctionConfig[i].endPrice);
-        expect(auction.discountRate).to.equal(auctionConfig[i].discountRate);
+        expect(auction.START_PRICE).to.equal(auctionConfig[i].START_PRICE);
+        expect(auction.END_PRICE).to.equal(auctionConfig[i].END_PRICE);
+        expect(auction.START_TIME).to.equal(AuctionStartTime_ + i * AuctionDuration_);
+        expect(auction.EXPIRE_AT).to.equal(AuctionStartTime_ + (i + 1) * AuctionDuration_);
       }
     });
 
