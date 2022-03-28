@@ -20,7 +20,6 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: return remaining msg.value in mint and auction
 // @audit-ok
 // @audit
-// TODO: write auction based on step reduced and wei
 // TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
 // TODO: set the correct name for NFT after Team Decide and change the Asci Art
 // TODO: think about future and needed event in that time
