@@ -207,7 +207,6 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         require(!STATE.FINISHED, 'NFT: Minting is already finished');
         require(!STATE.MINTING_IS_ACTIVE, 'NFT: Minting is already active');
         require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'NFT: WhiteListMinting should active before Public Minting');
-        STATE.WHITE_LIST_MINTING_IS_ACTIVE = false;
         STATE.MINTING_IS_ACTIVE = true;
     }
 
@@ -221,18 +220,15 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
     function finishMinting() external onlyDecentralTitan {
         require(!STATE.FINISHED, 'NFT: Minting is already finished');
         require(STATE.MINTING_IS_ACTIVE, 'NFT: Minting is not active');
-        require(
-            !STATE.WHITE_LIST_MINTING_IS_ACTIVE,
-            'NFT: WhiteListMinting should not active in the middle of the Minting'
-        );
         STATE.MINTING_IS_ACTIVE = false;
         STATE.AUCTION_IS_ACTIVE = false;
+        STATE.WHITE_LIST_MINTING_IS_ACTIVE = false;
         STATE.FINISHED = true;
     }
 
     // Auction related functions.
 
-    function buyAGod(uint8 day) external payable whileAuctionIsActive {
+    function buyAGodInAuction(uint8 day) external payable whileAuctionIsActive {
         // buy god
         // require contract in the state of active auction
         require(1 <= day && day <= MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'day is out of range');

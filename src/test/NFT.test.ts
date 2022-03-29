@@ -76,6 +76,8 @@ describe('NFT', function () {
       },
       upgradeRequestFeeInWei_
     )) as NFT;
+
+    await NFTContract.initializer(auctionConfig);
   });
 
   // TODO: check name and symbol
@@ -129,9 +131,6 @@ describe('NFT', function () {
   });
 
   describe('#initializer', async () => {
-    beforeEach(async () => {
-      await NFTContract.initializer(auctionConfig);
-    });
     it('should have correct royaltyInfo', async () => {
       const tempValue = 100;
       const tempRoyalty = 10
@@ -167,14 +166,22 @@ describe('NFT', function () {
         expect(auction.END_PRICE).to.equal(auctionConfig[i].END_PRICE);
         expect(auction.START_TIME).to.equal(AuctionStartTime_ + i * AuctionDuration_);
         expect(auction.EXPIRE_AT).to.equal(AuctionStartTime_ + (i + 1) * AuctionDuration_);
+        expect(auction.TOKEN_ID).to.equal(i);
+        expect(auction.IS_SOLD).to.equal(false);
+        expect(auction.AUCTION_DROP_INTERVAL).to.equal(auctionConfig[i].AUCTION_DROP_INTERVAL);
+        expect(auction.AUCTION_DROP_PER_STEP).to.equal(auctionConfig[i].AUCTION_DROP_PER_STEP);
       }
     });
 
   });
 
-  describe('', () => {
+  describe('#buyAGodInAuction', () => {
     // test buy in auction in normal case
-    // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
+    it('should buy a god in auction in normal case', async () => {
+      const tokenId = 0;
+      const price = await NFTContract.getAuctionPrice(tokenId);
+
+    });    // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
     // test buy in auction . check currentness of the price decrement
     // check buy in auction for the day that is not coming yet
     // test buy in auction when auction is not started

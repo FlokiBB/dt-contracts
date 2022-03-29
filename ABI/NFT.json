@@ -31,7 +31,7 @@
   "function UPGRADE_REQUEST_FEE_IS_PAID(uint256) view returns (bool)",
   "function approve(address,uint256)",
   "function balanceOf(address) view returns (uint256)",
-  "function buyAGod(uint8) payable",
+  "function buyAGodInAuction(uint8) payable",
   "function buyBackToken(uint16)",
   "function finishAuction()",
   "function finishMinting()",
