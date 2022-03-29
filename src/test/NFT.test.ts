@@ -179,9 +179,12 @@ describe('NFT', function () {
     // test buy in auction in normal case
     it('should buy a god in auction in normal case', async () => {
       const tokenId = 0;
-      const price = await NFTContract.getAuctionPrice(tokenId);
+      const day = tokenId + 1;
+      const price = await NFTContract.getAuctionPrice(day);
+      console.log(`price of token ${tokenId} is ${price}`);
 
-    });    // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
+    });    
+    // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
     // test buy in auction . check currentness of the price decrement
     // check buy in auction for the day that is not coming yet
     // test buy in auction when auction is not started
