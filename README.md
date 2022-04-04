@@ -1,11 +1,12 @@
-<H2> smartcontracts of nepoleia platform:</h2>
+<H2> contracts of DemmorTaltreasure :</h2>
 
-- NepoleiaNFT
+- NFT
 - BuyBackTreasury
 - GameTreasury
-- NepoleiaRoyaltyFeeDistributor
+- RoyaltyFeeDistributor
 - FundDistributor
 - MultiSig
+- guaranty prize contract
 
 ---
 

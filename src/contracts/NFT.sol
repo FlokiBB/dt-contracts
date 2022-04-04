@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.4;
 
-import './ERC721A.sol';
-import './NepoleiaOwnable.sol';
+import './DTERC721A.sol';
+import './DTOwnable.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
@@ -23,7 +23,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
 // TODO: set the correct name for NFT after Team Decide and change the Asci Art
 // TODO: think about future and needed event in that time
-contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
+contract NFT is DTERC721A, DTOwnable, ReentrancyGuard {
     using ECDSA for bytes32;
 
     // ███╗░░██╗███████╗██████╗░░█████╗░██╗░░░░░███████╗██╗░█████╗░
@@ -154,7 +154,7 @@ contract NFT is ERC721A, NepoleiaOwnable, ReentrancyGuard {
         string memory notRevealedArtCID_,
         ContactMintConfig memory mintConfig_,
         uint256 upgradeRequestFeeInWei_
-    ) ERC721A('NepoleiaNFT', 'NepoleiaNFT') NepoleiaOwnable(addresses_.OWNER) {
+    ) DTERC721A('DemmortalTreasure', 'DT') DTOwnable(addresses_.OWNER) {
         MAX_SUPPLY = maxSupply_;
         STATE = ContractState(false, false, false, false, false, false);
         ADDRESS = addresses_;
