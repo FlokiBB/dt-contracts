@@ -1,7 +1,7 @@
 {
-  "name": "nepoleia",
+  "name": "demmortaltreasure",
   "version": "1.0.0",
-  "description": "smartcontracts of nepoleia platform (nft token, buyBack treasury, game treasury, transactions splitter, etc)",
+  "description": "contracts of DemmortalTreasure platform (nft token, buyBack treasury, game treasury and etc)",
   "main": "index.js",
   "author": "Floki The Boat Builder  <FlokiBB@protonmail.com>",
   "license": "MIT",
