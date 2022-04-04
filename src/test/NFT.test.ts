@@ -42,7 +42,7 @@ describe('NFT', function () {
       END_PRICE: 1,
       AUCTION_DROP_INTERVAL: 375,
       AUCTION_DROP_PER_STEP: 5,
-    }];
+  }];
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
@@ -171,6 +171,12 @@ describe('NFT', function () {
         expect(auction.AUCTION_DROP_INTERVAL).to.equal(auctionConfig[i].AUCTION_DROP_INTERVAL);
         expect(auction.AUCTION_DROP_PER_STEP).to.equal(auctionConfig[i].AUCTION_DROP_PER_STEP);
       }
+    });
+
+    it('god should not be able to BuyBack theirs token ', async () => {
+      const accounts = await ethers.getSigners();
+      const tokenId = NumberOFTokenForAuction_ - 1;
+      await expect(NFTContract.connect(accounts[2]).buyBackToken(tokenId)).to.be.revertedWith('this function is only functional for humans');
     });
 
   });
