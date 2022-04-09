@@ -649,4 +649,32 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         uint256 startTokenId,
         uint256 quantity
     ) internal virtual {}
+
+    
+    uint256 public nextOwnerToExplicitlySet = 0;
+
+    /**
+    * @dev Explicitly set `owners` to eliminate loops in future calls of ownerOf().
+    */
+    function _setOwnersExplicit(uint256 quantity) internal {
+        uint256 oldNextOwnerToSet = nextOwnerToExplicitlySet;
+        require(quantity > 0, "quantity must be nonzero");
+        uint256 endIndex = oldNextOwnerToSet + quantity - 1;
+        if (endIndex > _totalMinted() - 1) {
+        endIndex = _totalMinted() - 1;
+        }
+        // We know if the last one in the group exists, all in the group exist, due to serial ordering.
+        require(_exists(endIndex), "not enough minted yet for this cleanup");
+        for (uint256 i = oldNextOwnerToSet; i <= endIndex; i++) {
+            if (_ownerships[i].addr == address(0)) {
+                TokenOwnership memory ownership = ownershipOf(i);
+                _ownerships[i] = TokenOwnership(
+                    ownership.addr,
+                    ownership.startTimestamp,
+                    ownership.burned
+                );
+            }
+        }
+        nextOwnerToExplicitlySet = endIndex + 1;
+    }
 }

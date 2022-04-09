@@ -11,7 +11,7 @@ import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // TODO: diffrent compiler version issue with library
-// TODO: receive and fall back
+// TODO: receive and fall back (and withdraw function if needed)
 // TODO: good require message
 // TODO: proper name for functions and variables
 // TODO: set getter and setter for variables if needed
@@ -20,8 +20,6 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // TODO: add NatSpec in above of the function
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
 // TODO: return remaining msg.value in mint and auction
-// @audit-ok
-// @audit
 // TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
 // TODO: think about future and needed event in that time and backend
 contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
@@ -447,11 +445,17 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
     }
 
+
     // utility functions
 
     function _transferEth(address to_, uint256 amount) private {
         address payable to = payable(to_);
         (bool sent, ) = to.call{value: amount}('');
         require(sent, 'Failed to send Ether');
+    }
+
+    // @audit i think we dont need accsess modifire like onlyOwner for this function double check it.
+    function setOwnersExplicit(uint256 quantity) external nonReentrant {
+        _setOwnersExplicit(quantity);
     }
 }
