@@ -1,29 +1,30 @@
 // SPDX-License-Identifier: MIT
+// Creator: DDD(DeDogma DAO)
 
 pragma solidity ^0.8.4;
 
 import './DTERC721A.sol';
 import './DTOwnable.sol';
+import './IERC2981Royalties.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
+// TODO: diffrent compiler version issue with library
 // TODO: receive and fall back
 // TODO: good require message
 // TODO: proper name for functions and variables
 // TODO: set getter and setter for variables if needed
 // ToDo: attention to eip165
-// TODO: check 2982 correctness of implementation
+// TODO: check 2981 correctness of implementation
 // TODO: add NatSpec in above of the function
 // TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
-// TODO: use error instead of revert(it help to deployment cost but there is trade off)
 // TODO: return remaining msg.value in mint and auction
 // @audit-ok
 // @audit
 // TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
-// TODO: set the correct name for NFT after Team Decide and change the Asci Art
-// TODO: think about future and needed event in that time
-contract NFT is DTERC721A, DTOwnable, ReentrancyGuard {
+// TODO: think about future and needed event in that time and backend
+contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
     // *******************************************************************************
@@ -436,7 +437,12 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard {
         _ROYALTIES = RoyaltyInfo(recipient, uint8(value));
     }
 
-    function royaltyInfo(uint256, uint256 value) external view returns (address receiver, uint256 royaltyAmount) {
+    function royaltyInfo(uint256, uint256 value)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
         receiver = _ROYALTIES.RECIPIENT;
         royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
     }
@@ -448,11 +454,4 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard {
         (bool sent, ) = to.call{value: amount}('');
         require(sent, 'Failed to send Ether');
     }
-
-    // ███████╗██╗░░░░░░█████╗░██╗░░██╗██╗  ██████╗░██████╗░
-    // ██╔════╝██║░░░░░██╔══██╗██║░██╔╝██║  ██╔══██╗██╔══██╗
-    // █████╗░░██║░░░░░██║░░██║█████═╝░██║  ██████╦╝██████╦╝
-    // ██╔══╝░░██║░░░░░██║░░██║██╔═██╗░██║  ██╔══██╗██╔══██╗
-    // ██║░░░░░███████╗╚█████╔╝██║░╚██╗██║  ██████╦╝██████╦╝
-    // ╚═╝░░░░░╚══════╝░╚════╝░╚═╝░░╚═╝╚═╝  ╚═════╝░╚═════╝░
 }

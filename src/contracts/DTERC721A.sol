@@ -12,6 +12,8 @@ import '@openzeppelin/contracts/utils/Context.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
 
+import './IERC2981Royalties.sol';
+
 error ApprovalCallerNotOwnerNorApproved();
 error ApprovalQueryForNonexistentToken();
 error ApproveToCaller();
@@ -41,7 +43,7 @@ error URIQueryForNonexistentToken();
  *
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
-contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata {
+contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
     using Address for address;
     using Strings for uint256;
 
@@ -111,12 +113,45 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata {
      * @dev See {IERC721Enumerable-totalSupply}.
      * @dev Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.
      */
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         // Counter underflow is impossible as _burnCounter cannot be incremented
         // more than _currentIndex - _startTokenId() times
         unchecked {
             return _currentIndex - _burnCounter - _startTokenId();
         }
+    }
+
+    /**
+     * @dev See {IERC721Enumerable-tokenByIndex}.
+     */
+    function tokenByIndex(uint256 index) public view override returns (uint256) {
+        require(index < totalSupply(), 'ERC721A: global index out of bounds');
+        return index;
+    }
+
+    /**
+     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
+     * This read function is O(collectionSize). If calling from a separate contract, be sure to test gas first.
+     * It may also degrade with extremely large collection sizes (e.g >> 10000), test for your use case.
+     */
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view override returns (uint256) {
+        require(index < balanceOf(owner), 'ERC721A: owner index out of bounds');
+        uint256 numMintedSoFar = totalSupply();
+        uint256 tokenIdsIdx = 0;
+        address currOwnershipAddr = address(0);
+        for (uint256 i = 0; i < numMintedSoFar; i++) {
+            TokenOwnership memory ownership = _ownerships[i];
+            if (ownership.addr != address(0)) {
+                currOwnershipAddr = ownership.addr;
+            }
+            if (currOwnershipAddr == owner) {
+                if (tokenIdsIdx == index) {
+                    return i;
+                }
+                tokenIdsIdx++;
+            }
+        }
+        revert('ERC721A: unable to get token of owner by index');
     }
 
     /**
@@ -137,6 +172,8 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata {
         return
             interfaceId == type(IERC721).interfaceId ||
             interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC721Enumerable).interfaceId ||
+            interfaceId == type(IERC2981Royalties).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 

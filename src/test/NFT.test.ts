@@ -142,7 +142,6 @@ describe('NFT', function () {
       const ownerAddress: string[] = []
       for (let i = 0; i < NumberOFTokenForAuction_; i++) {
         const address = await NFTContract.ownerOf(i);
-        console.log(`owner of token ${i} is ${address}`);
         if (!ownerAddress.includes(address as string)) {
           ownerAddress.push(address as string);
         }
@@ -160,8 +159,6 @@ describe('NFT', function () {
     it('should set auction config correctly', async () => {
       for (let i = 0; i < NumberOFTokenForAuction_; i++) {
         const auction = await NFTContract.AUCTIONS(i+1);
-        console.log(auction);
-        console.log(await NFTContract.getAuctionPrice(i+1));
         expect(auction.START_PRICE).to.equal(auctionConfig[i].START_PRICE);
         expect(auction.END_PRICE).to.equal(auctionConfig[i].END_PRICE);
         expect(auction.START_TIME).to.equal(AuctionStartTime_ + i * AuctionDuration_);
@@ -177,6 +174,18 @@ describe('NFT', function () {
       const accounts = await ethers.getSigners();
       const tokenId = NumberOFTokenForAuction_ - 1;
       await expect(NFTContract.connect(accounts[2]).buyBackToken(tokenId)).to.be.revertedWith('this function is only functional for humans');
+    });
+
+    it('check currentness of tokenOfOwnerByIndex' ,async () => {
+      const currentSupply = await NFTContract.totalSupply();
+      expect(currentSupply).to.equal(NumberOFTokenForAuction_);
+      const tokenIdByIndex = await NFTContract.tokenByIndex(NumberOFTokenForAuction_ - 1)
+      expect(tokenIdByIndex).to.equal(NumberOFTokenForAuction_ - 1)
+      const balance = await NFTContract.balanceOf(defiTitanAddress);
+      for (let i = 0; i < balance.toNumber(); i++) {
+        const tokenId = await NFTContract.tokenOfOwnerByIndex(defiTitanAddress, i);
+        expect(tokenId).to.equal(i);
+      }
     });
 
   });
