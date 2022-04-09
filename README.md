@@ -12,7 +12,7 @@
 
 <H2>Flowchart:</h2>
 
-![image flowchart](./Flowchart.jpg)
+![image flowchart](./Flowchart.png)
 
 ---
 
