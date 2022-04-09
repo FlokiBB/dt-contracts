@@ -23,7 +23,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // @audit-ok
 // @audit
 // TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
-// TODO: think about future and needed event in that time and backend 
+// TODO: think about future and needed event in that time and backend
 contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
@@ -437,7 +437,12 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         _ROYALTIES = RoyaltyInfo(recipient, uint8(value));
     }
 
-    function royaltyInfo(uint256, uint256 value) external view override returns (address receiver, uint256 royaltyAmount) {
+    function royaltyInfo(uint256, uint256 value)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
         receiver = _ROYALTIES.RECIPIENT;
         royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
     }
@@ -449,5 +454,4 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         (bool sent, ) = to.call{value: amount}('');
         require(sent, 'Failed to send Ether');
     }
-
 }

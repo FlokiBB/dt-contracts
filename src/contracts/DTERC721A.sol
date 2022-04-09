@@ -14,7 +14,6 @@ import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
 
 import './IERC2981Royalties.sol';
 
-
 error ApprovalCallerNotOwnerNorApproved();
 error ApprovalQueryForNonexistentToken();
 error ApproveToCaller();
@@ -121,43 +120,39 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
             return _currentIndex - _burnCounter - _startTokenId();
         }
     }
+
     /**
-    * @dev See {IERC721Enumerable-tokenByIndex}.
-    */
+     * @dev See {IERC721Enumerable-tokenByIndex}.
+     */
     function tokenByIndex(uint256 index) public view override returns (uint256) {
-        require(index < totalSupply(), "ERC721A: global index out of bounds");
+        require(index < totalSupply(), 'ERC721A: global index out of bounds');
         return index;
     }
 
     /**
-   * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
-   * This read function is O(collectionSize). If calling from a separate contract, be sure to test gas first.
-   * It may also degrade with extremely large collection sizes (e.g >> 10000), test for your use case.
-   */
-  function tokenOfOwnerByIndex(address owner, uint256 index)
-    public
-    view
-    override
-    returns (uint256)
-  {
-    require(index < balanceOf(owner), "ERC721A: owner index out of bounds");
-    uint256 numMintedSoFar = totalSupply();
-    uint256 tokenIdsIdx = 0;
-    address currOwnershipAddr = address(0);
-    for (uint256 i = 0; i < numMintedSoFar; i++) {
-      TokenOwnership memory ownership = _ownerships[i];
-      if (ownership.addr != address(0)) {
-        currOwnershipAddr = ownership.addr;
-      }
-      if (currOwnershipAddr == owner) {
-        if (tokenIdsIdx == index) {
-          return i;
+     * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
+     * This read function is O(collectionSize). If calling from a separate contract, be sure to test gas first.
+     * It may also degrade with extremely large collection sizes (e.g >> 10000), test for your use case.
+     */
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view override returns (uint256) {
+        require(index < balanceOf(owner), 'ERC721A: owner index out of bounds');
+        uint256 numMintedSoFar = totalSupply();
+        uint256 tokenIdsIdx = 0;
+        address currOwnershipAddr = address(0);
+        for (uint256 i = 0; i < numMintedSoFar; i++) {
+            TokenOwnership memory ownership = _ownerships[i];
+            if (ownership.addr != address(0)) {
+                currOwnershipAddr = ownership.addr;
+            }
+            if (currOwnershipAddr == owner) {
+                if (tokenIdsIdx == index) {
+                    return i;
+                }
+                tokenIdsIdx++;
+            }
         }
-        tokenIdsIdx++;
-      }
+        revert('ERC721A: unable to get token of owner by index');
     }
-    revert("ERC721A: unable to get token of owner by index");
-  }
 
     /**
      * Returns the total amount of tokens minted in the contract.
@@ -173,19 +168,13 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
-        interfaceId == type(IERC721).interfaceId ||
-        interfaceId == type(IERC721Metadata).interfaceId ||
-        interfaceId == type(IERC721Enumerable).interfaceId ||
-        interfaceId == type(IERC2981Royalties).interfaceId ||
-        super.supportsInterface(interfaceId);
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC721Enumerable).interfaceId ||
+            interfaceId == type(IERC2981Royalties).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /**
@@ -660,6 +649,4 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         uint256 startTokenId,
         uint256 quantity
     ) internal virtual {}
-
-
 }
