@@ -445,7 +445,6 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
     }
 
-
     // utility functions
 
     function _transferEth(address to_, uint256 amount) private {
