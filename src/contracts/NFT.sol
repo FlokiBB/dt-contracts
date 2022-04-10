@@ -344,10 +344,8 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         bytes calldata sig_
     ) public view returns (bool) {
         return
-            ECDSA.recover(
-                keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)),
-                sig_
-            ) == ADDRESS.WHITE_LIST_VERIFIER;
+            ECDSA.recover(keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)), sig_) ==
+            ADDRESS.WHITE_LIST_VERIFIER;
     }
 
     // Minting related functions.
