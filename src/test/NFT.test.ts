@@ -173,7 +173,7 @@ describe('NFT', function () {
     it('god should not be able to BuyBack theirs token ', async () => {
       const accounts = await ethers.getSigners();
       const tokenId = NumberOFTokenForAuction_ - 1;
-      await expect(NFTContract.connect(accounts[2]).buyBackToken(tokenId)).to.be.revertedWith('this function is only functional for humans');
+      await expect(NFTContract.connect(accounts[2]).buyBackToken(tokenId)).to.be.revertedWith('Only Humans');
     });
 
     it('check currentness of tokenOfOwnerByIndex' ,async () => {
@@ -250,4 +250,27 @@ describe('NFT', function () {
   describe('#CustomOwnable', () => { });
 
   describe('#TokenURI', () => { });
+
+  describe('#Utils', () => { 
+    it('test receive and fall back', async () => {
+      const accounts = await ethers.getSigners();
+
+      // test receive 
+      await expect(accounts[6].sendTransaction({
+        to: NFTContract.address, 
+        value: ethers.utils.parseEther('0.01'), 
+        gasLimit: 5000000
+      })).to.be.revertedWith('Not Allowed');
+
+      await expect(accounts[6].sendTransaction({
+        to: NFTContract.address,
+        value: ethers.utils.parseEther('0.01'),
+        gasLimit: 5000000,
+        data: "0x0005"
+      })).to.be.revertedWith('Call Valid Function');
+
+
+    });    
+  });
+
 });

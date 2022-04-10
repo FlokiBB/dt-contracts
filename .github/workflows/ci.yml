@@ -1,4 +1,4 @@
-name: Linter
+name: linter && unit-tests && static security check
 
 on:
   push:

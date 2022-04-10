@@ -419,7 +419,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         if (to == address(0)) revert MintToZeroAddress();
         if (quantity == 0) revert MintZeroQuantity();
 
-        _beforeTokenTransfers(address(0), to, startTokenId, quantity);
 
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
@@ -442,7 +441,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
                     }
                 } while (updatedIndex != end);
                 // Reentrancy protection
-                if (_currentIndex != startTokenId) revert();
+                if (_currentIndex != startTokenId) revert("Reentrancy protection");
             } else {
                 do {
                     emit Transfer(address(0), to, updatedIndex++);
@@ -450,7 +449,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
             }
             _currentIndex = updatedIndex;
         }
-        _afterTokenTransfers(address(0), to, startTokenId, quantity);
     }
 
     /**
@@ -477,8 +475,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
         if (to == address(0)) revert TransferToZeroAddress();
-
-        _beforeTokenTransfers(from, to, tokenId, 1);
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, prevOwnership.addr);
@@ -507,7 +503,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         }
 
         emit Transfer(from, to, tokenId);
-        _afterTokenTransfers(from, to, tokenId, 1);
     }
 
     /**
@@ -522,8 +517,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      */
     function _burn(uint256 tokenId) internal virtual {
         TokenOwnership memory prevOwnership = ownershipOf(tokenId);
-
-        _beforeTokenTransfers(prevOwnership.addr, address(0), tokenId, 1);
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, prevOwnership.addr);
@@ -554,8 +547,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         }
 
         emit Transfer(prevOwnership.addr, address(0), tokenId);
-        _afterTokenTransfers(prevOwnership.addr, address(0), tokenId, 1);
-
         // Overflow not possible, as _burnCounter cannot be exceed _currentIndex times.
         unchecked {
             _burnCounter++;
@@ -620,12 +611,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * - When `to` is zero, `tokenId` will be burned by `from`.
      * - `from` and `to` are never both zero.
      */
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual {}
 
     /**
      * @dev Hook that is called after a set of serially-ordered token ids have been transferred. This includes
@@ -643,12 +628,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * - When `to` is zero, `tokenId` has been burned by `from`.
      * - `from` and `to` are never both zero.
      */
-    function _afterTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual {}
 
     uint256 public nextOwnerToExplicitlySet = 0;
 

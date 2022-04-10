@@ -10,18 +10,8 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
-// TODO: diffrent compiler version issue with library
-// TODO: receive and fall back (and withdraw function if needed)
+// TODO: @audit diffrent compiler version issue with library
 // TODO: good require message
-// TODO: proper name for functions and variables
-// TODO: set getter and setter for variables if needed
-// ToDo: attention to eip165
-// TODO: check 2981 correctness of implementation
-// TODO: add NatSpec in above of the function
-// TODO: add https://www.npmjs.com/package/@primitivefi/hardhat-dodoc to project
-// TODO: return remaining msg.value in mint and auction
-// TODO: this can be good to have (endAuctionAndSetupNonAuctionSaleInfo)
-// TODO: think about future and needed event in that time and backend
 contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
@@ -110,6 +100,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
     // Events
     event UpgradeRequestPayment(uint16 _token, uint256 _value);
+    event TokenUpgraded(uint16 _token);
 
     // State variables
     uint16 public immutable MAX_SUPPLY;
@@ -129,34 +120,34 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
     // Modifires
     modifier whileAuctionIsActive() {
-        require(STATE.AUCTION_IS_ACTIVE, 'Auction is not active');
+        require(STATE.AUCTION_IS_ACTIVE, 'Not Activated');
         _;
     }
     modifier whileMintingIsActive() {
-        require(STATE.MINTING_IS_ACTIVE, 'Minting is not active');
+        require(STATE.MINTING_IS_ACTIVE, 'Not Activated');
         _;
     }
     modifier whileWhiteListMintingIsActive() {
-        require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'WhiteListMinting is not active');
+        require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'Not Activated');
         _;
     }
     modifier whileMintingDone() {
-        require(STATE.FINISHED, 'Minting is not finished');
-        require(STATE.INITIALIZED, 'Contract is not initialized');
+        require(STATE.FINISHED, 'Not Finished');
+        require(STATE.INITIALIZED, 'Not Initialized');
         _;
     }
 
     modifier onlyPlatform() {
-        require(ADDRESS.PLATFORM == _msgSender(), 'Only platform address can call this function');
+        require(ADDRESS.PLATFORM == _msgSender(), 'Only Platform Address');
         _;
     }
     modifier onlyDecentralTitan() {
-        require(ADDRESS.DECENTRAL_TITAN == _msgSender(), 'Only defi titan address can call this function');
+        require(ADDRESS.DECENTRAL_TITAN == _msgSender(), 'Only DECENTRAL_TITAN');
         _;
     }
 
     modifier onlyHuman(uint16 tokenId_) {
-        require(!TOKEN_IS_GOD[tokenId_], 'this function is only functional for humans');
+        require(!TOKEN_IS_GOD[tokenId_], 'Only Humans');
         _;
     }
 
@@ -179,9 +170,9 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
     // State Management related functions.
     function initializer(AuctionConfig[] calldata configs) external onlyOwner {
-        require(!STATE.INITIALIZED, 'NFT: contract is already initialized');
-        require(!STATE.FINISHED, 'NFT: contract is already finished');
-        require(!STATE.AUCTION_IS_ACTIVE, 'NFT: auction is already active');
+        require(!STATE.INITIALIZED, 'Already Initialized');
+        require(!STATE.FINISHED, 'Already Finished');
+        require(!STATE.AUCTION_IS_ACTIVE, 'Already Activated');
         STATE.INITIALIZED = true;
         _setupGodAuction(configs);
         STATE.AUCTION_IS_ACTIVE = true;
@@ -190,14 +181,14 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     }
 
     function revealArt(string memory ipfsCid) external onlyOwner {
-        require(!STATE.ART_IS_REVEALED, 'Art is already revealed');
+        require(!STATE.ART_IS_REVEALED, 'Already Revealed');
         uint256 len = bytes(ipfsCid).length;
-        require(len > 0, 'CID is empty');
+        require(len > 0, 'CID Is Empty');
         IPFS.ART_CID = ipfsCid;
         STATE.ART_IS_REVEALED = true;
     }
 
-    function setPlatform(address platform_) external onlyDecentralTitan {
+    function setPlatform(address platform_) external onlyPlatform {
         ADDRESS.PLATFORM = platform_;
     }
 
@@ -205,34 +196,39 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         ADDRESS.BUY_BACK_TREASURY_CONTRACT = buyBackTreasury_;
     }
 
+    function setRoyaltyReciver(address royaltyDistributerContract_) external onlyPlatform {
+        ADDRESS.ROYALTY_DISTRIBUTOR_CONTRACT = royaltyDistributerContract_;
+        _setRoyalties(ADDRESS.ROYALTY_DISTRIBUTOR_CONTRACT, MINTING_CONFIG.ROYALTY_FEE_PERCENT);
+    }
+
     function setUpgradeRequestFeeInWei(uint256 upgradeRequestFeeInWei_) external onlyDecentralTitan whileMintingDone {
         UPGRADE_REQUEST_FEE_IN_WEI = upgradeRequestFeeInWei_;
     }
 
     function startWhiteListMinting() external onlyOwner {
-        require(STATE.INITIALIZED, 'NFT: contract is not initialized');
-        require(!STATE.FINISHED, 'NFT: Minting is already finished');
-        require(!STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'NFT: WhiteListMinting is already active');
+        require(STATE.INITIALIZED, 'Not Initialized');
+        require(!STATE.FINISHED, 'Already Finished');
+        require(!STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'Already Activated');
         STATE.WHITE_LIST_MINTING_IS_ACTIVE = true;
     }
 
     function startPublicMinting() external onlyOwner {
-        require(!STATE.FINISHED, 'NFT: Minting is already finished');
-        require(!STATE.MINTING_IS_ACTIVE, 'NFT: Minting is already active');
-        require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'NFT: WhiteListMinting should active before Public Minting');
+        require(!STATE.FINISHED, 'Already Finished');
+        require(!STATE.MINTING_IS_ACTIVE, 'Already Activated');
+        require(STATE.WHITE_LIST_MINTING_IS_ACTIVE, 'Priority Issue');
         STATE.MINTING_IS_ACTIVE = true;
     }
 
     function finishAuction() external onlyDecentralTitan {
-        require(!STATE.FINISHED, 'NFT: Minting is already finished');
-        require(STATE.INITIALIZED, 'NFT: contract is not initialized');
-        require(STATE.AUCTION_IS_ACTIVE, 'NFT: Auction is not active');
+        require(!STATE.FINISHED, 'Already Finished');
+        require(STATE.INITIALIZED, 'Not Initialized');
+        require(STATE.AUCTION_IS_ACTIVE, 'Not Activated');
         STATE.AUCTION_IS_ACTIVE = false;
     }
 
     function finishMinting() external onlyDecentralTitan {
-        require(!STATE.FINISHED, 'NFT: Minting is already finished');
-        require(STATE.MINTING_IS_ACTIVE, 'NFT: Minting is not active');
+        require(!STATE.FINISHED, 'Already Finished');
+        require(STATE.MINTING_IS_ACTIVE, 'Not Activated');
         STATE.MINTING_IS_ACTIVE = false;
         STATE.AUCTION_IS_ACTIVE = false;
         STATE.WHITE_LIST_MINTING_IS_ACTIVE = false;
@@ -244,23 +240,23 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function buyAGodInAuction(uint8 day) external payable whileAuctionIsActive {
         // buy god
         // require contract in the state of active auction
-        require(1 <= day && day <= MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'day is out of range');
-        require(AUCTIONS[day].START_TIME <= block.timestamp, 'auction is not started yet');
-        require(AUCTIONS[day].EXPIRE_AT >= block.timestamp, 'auction is expired');
+        require(1 <= day && day <= MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Day Is Out Of Range');
+        require(AUCTIONS[day].START_TIME <= block.timestamp, 'Not Started Yet');
+        require(AUCTIONS[day].EXPIRE_AT >= block.timestamp, 'Expired');
 
         Auction memory auction = AUCTIONS[day];
         TokenOwnership memory ownership = ownershipOf(auction.TOKEN_ID);
-        require(!auction.IS_SOLD, 'auction is already sold');
-        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'auction is not owned by Decentral Titan');
+        require(!auction.IS_SOLD, 'Already Sold');
+        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'Bad Initialization');
 
         uint256 currentPrice = _getAuctionPrice(auction);
 
-        require(currentPrice <= auction.END_PRICE, 'auction has ended because it receive to base price');
-        require(currentPrice <= msg.value, 'not enough ether');
+        require(currentPrice <= auction.END_PRICE, 'Receive To Base Price');
+        require(currentPrice <= msg.value, 'Not Enough Ether');
 
         transferFrom(ADDRESS.DECENTRAL_TITAN, msg.sender, auction.TOKEN_ID);
 
-        _transferEth(ADDRESS.DECENTRAL_TITAN, msg.value);
+        _transferEth(ADDRESS.PLATFORM, msg.value);
     }
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
@@ -285,17 +281,17 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function _setupGodAuction(AuctionConfig[] memory configs) private {
         require(
             _totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY,
-            'not enough space for new auctions'
+            'Recive To Max Supply'
         );
         require(
             configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION,
-            'configs must be the same length as count'
+            'Bad Configs Length'
         );
 
         _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
 
         // we need set first token id to the token sell in auction for CID availability.
-        require(_totalMinted() == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'bad initialization of contract');
+        require(_totalMinted() == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Initialization');
 
         for (uint8 i = 0; i < MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION; i++) {
             Auction memory _auction = Auction(
@@ -316,7 +312,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
     function _defiTitanAuctionApproval(uint8 tokenId) private {
         TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'this is work only for defi titan assets');
+        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'Just For DECENTRAL_TITAN');
         _approve(address(this), tokenId, ADDRESS.DECENTRAL_TITAN);
     }
 
@@ -328,18 +324,18 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         WhiteListType whiteListType_,
         bytes calldata sig
     ) external payable whileWhiteListMintingIsActive {
-        require(isWhitelisted(addr_, maxQuantity_, whiteListType_, sig), 'signature is not valid');
-        require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Max supply is reached');
+        require(isWhitelisted(addr_, maxQuantity_, whiteListType_, sig), 'Bad Signature');
+        require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Recive To Max Supply');
 
         uint64 _aux = _getAux(addr_);
 
-        require(_aux + quantity_ <= maxQuantity_, 'Quantity is not valid');
+        require(_aux + quantity_ <= maxQuantity_, 'Receive To Max Quantity');
 
         if (whiteListType_ == WhiteListType.ROYAL) {
             _setAux(addr_, _aux + quantity_);
             _safeMint(addr_, quantity_);
         } else {
-            require(quantity_ * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'Not enoughs ether.');
+            require(quantity_ * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'Not Enoughs Ether');
             _setAux(addr_, _aux + quantity_);
             _safeMint(addr_, quantity_);
         }
@@ -366,17 +362,17 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function publicMint(uint256 quantity) external payable whileMintingIsActive {
         require(
             _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MAX_MINT_PER_ADDRESS,
-            'NFT: you reached the maximum number of mints per address'
+            'Receive To Max Mint Per Address'
         );
-        require(quantity * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'not enoughs ether');
+        require(quantity * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'Not Enoughs Ether');
         _safeMint(msg.sender, quantity);
         _transferEth(ADDRESS.BUY_BACK_TREASURY_CONTRACT, msg.value);
     }
 
     // Token Upgradeability related functions.
     function upgradeTokenRequestFee(uint16 tokenId) external payable whileMintingDone onlyHuman(tokenId) {
-        require(_exists(tokenId), 'token does not exist');
-        require(UPGRADE_REQUEST_FEE_IN_WEI <= msg.value, 'not enoughs ether');
+        require(_exists(tokenId), 'Token Not Exists');
+        require(UPGRADE_REQUEST_FEE_IN_WEI <= msg.value, 'Not Enoughs Ether');
 
         UPGRADE_REQUEST_FEE_IS_PAID[tokenId] = true;
 
@@ -388,21 +384,22 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         string memory ipfsCid,
         uint16 tokenId,
         bool isGodNow
-    ) external whileMintingDone onlyPlatform onlyHuman(tokenId) {
+    ) external whileMintingDone onlyOwner onlyHuman(tokenId) {
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
-        require(UPGRADE_REQUEST_FEE_IS_PAID[tokenId], 'upgrade fee is not paid');
+        require(UPGRADE_REQUEST_FEE_IS_PAID[tokenId], 'Upgrade Request Fee Not Paid');
         UPGRADE_REQUEST_FEE_IS_PAID[tokenId] = false;
         _UPGRADED_TOKEN_CID[tokenId] = ipfsCid;
         TOKEN_IS_UPGRADED[tokenId] = true;
         if (isGodNow) {
             TOKEN_IS_GOD[tokenId] = true;
         }
+        emit TokenUpgraded(tokenId);
     }
 
     // customize Token URI
     function tokenURI(uint256 tokenId_) public view override returns (string memory) {
-        require(_exists(tokenId_), 'token does not exist');
+        require(_exists(tokenId_), 'Token Not Exists');
 
         uint16 id = uint16(tokenId_);
 
@@ -419,18 +416,14 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
     // Token BuyBack related functions.
     function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
-        require(_exists(tokenId), 'token does not exist');
+        require(_exists(tokenId), 'Token Not Exists');
         TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(msg.sender == ownership.addr, 'only owner of token can buy back token');
+        require(msg.sender == ownership.addr, 'Not Owner');
         _burn(tokenId);
-        // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender
+        // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender as a parameter
     }
 
     // EIP-2981 related functions.
-
-    /// @dev Sets token royalties
-    /// @param recipient recipient of the royalties
-    /// @param value percentage of the royalties
     function _setRoyalties(address recipient, uint8 value) internal {
         _ROYALTIES = RoyaltyInfo(recipient, uint8(value));
     }
@@ -450,11 +443,21 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function _transferEth(address to_, uint256 amount) private {
         address payable to = payable(to_);
         (bool sent, ) = to.call{value: amount}('');
-        require(sent, 'Failed to send Ether');
+        require(sent, 'Transfer Failed');
     }
 
     // @audit i think we dont need accsess modifire like onlyOwner for this function double check it.
     function setOwnersExplicit(uint256 quantity) external nonReentrant {
         _setOwnersExplicit(quantity);
     }
+
+    receive() external payable{
+        revert("Not Allowed");
+    }
+    fallback() external payable {
+        revert("Call Valid Function");
+    }
+
+    // @audit are we need a withdraw function due we don't keep any in the contract?
+
 }
