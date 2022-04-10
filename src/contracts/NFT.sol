@@ -278,14 +278,8 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
-        require(
-            _totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY,
-            'Recive To Max Supply'
-        );
-        require(
-            configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION,
-            'Bad Configs Length'
-        );
+        require(_totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Recive To Max Supply');
+        require(configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Configs Length');
 
         _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
 
@@ -450,13 +444,13 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         _setOwnersExplicit(quantity);
     }
 
-    receive() external payable{
-        revert("Not Allowed");
+    receive() external payable {
+        revert('Not Allowed');
     }
+
     fallback() external payable {
-        revert("Call Valid Function");
+        revert('Call Valid Function');
     }
 
     // @audit are we need a withdraw function due we don't keep any in the contract?
-
 }

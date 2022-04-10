@@ -419,7 +419,6 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         if (to == address(0)) revert MintToZeroAddress();
         if (quantity == 0) revert MintZeroQuantity();
 
-
         // Overflows are incredibly unrealistic.
         // balance or numberMinted overflow if current value of either + quantity > 1.8e19 (2**64) - 1
         // updatedIndex overflows if _currentIndex + quantity > 1.2e77 (2**256) - 1
@@ -441,7 +440,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
                     }
                 } while (updatedIndex != end);
                 // Reentrancy protection
-                if (_currentIndex != startTokenId) revert("Reentrancy protection");
+                if (_currentIndex != startTokenId) revert('Reentrancy protection');
             } else {
                 do {
                     emit Transfer(address(0), to, updatedIndex++);
