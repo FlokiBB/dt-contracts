@@ -1,0 +1,110 @@
+{
+  "id": "4da23d295f360905c48e84c0f721accb",
+  "_format": "hh-sol-build-info-1",
+  "solcVersion": "0.8.4",
+  "solcLongVersion": "0.8.4+commit.c7e474f2",
+  "input": {
+    "language": "Solidity",
+    "sources": {
+      "src/contracts/DAOTreasury.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n// Creator: DDD(DeDogma DAO)\n\npragma solidity ^0.8.4;\n\ncontract DAOTreasury {\n    \n}"
+      }
+    },
+    "settings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": 500
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ],
+          "": [
+            "ast"
+          ]
+        }
+      }
+    }
+  },
+  "output": {
+    "contracts": {
+      "src/contracts/DAOTreasury.sol": {
+        "DAOTreasury": {
+          "abi": [],
+          "evm": {
+            "bytecode": {
+              "generatedSources": [],
+              "linkReferences": {},
+              "object": "6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212203c4203d8e7dc809e60de1f0a4d2a2650da46c2768900875b14b34b77a243754364736f6c63430008040033",
+              "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE CALLVALUE DUP1 ISZERO PUSH1 0xF JUMPI PUSH1 0x0 DUP1 REVERT JUMPDEST POP PUSH1 0x3F DUP1 PUSH1 0x1D PUSH1 0x0 CODECOPY PUSH1 0x0 RETURN INVALID PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x0 DUP1 REVERT INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 EXTCODECOPY TIMESTAMP SUB 0xD8 0xE7 0xDC DUP1 SWAP15 PUSH1 0xDE 0x1F EXP 0x4D 0x2A 0x26 POP 0xDA CHAINID 0xC2 PUSH23 0x8900875B14B34B77A243754364736F6C63430008040033 ",
+              "sourceMap": "87:29:0:-:0;;;;;;;;;;;;;;;;;;;"
+            },
+            "deployedBytecode": {
+              "generatedSources": [],
+              "immutableReferences": {},
+              "linkReferences": {},
+              "object": "6080604052600080fdfea26469706673582212203c4203d8e7dc809e60de1f0a4d2a2650da46c2768900875b14b34b77a243754364736f6c63430008040033",
+              "opcodes": "PUSH1 0x80 PUSH1 0x40 MSTORE PUSH1 0x0 DUP1 REVERT INVALID LOG2 PUSH5 0x6970667358 0x22 SLT KECCAK256 EXTCODECOPY TIMESTAMP SUB 0xD8 0xE7 0xDC DUP1 SWAP15 PUSH1 0xDE 0x1F EXP 0x4D 0x2A 0x26 POP 0xDA CHAINID 0xC2 PUSH23 0x8900875B14B34B77A243754364736F6C63430008040033 ",
+              "sourceMap": "87:29:0:-:0;;;;;"
+            },
+            "methodIdentifiers": {}
+          },
+          "metadata": "{\"compiler\":{\"version\":\"0.8.4+commit.c7e474f2\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/contracts/DAOTreasury.sol\":\"DAOTreasury\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":500},\"remappings\":[]},\"sources\":{\"src/contracts/DAOTreasury.sol\":{\"keccak256\":\"0x24abe0c1233ccdee2de46642b3b0eea5301bb59acb23b3f2ea405efaffcc3ee9\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7f1ff2e57d7fcba3f64ff317e64e56a867924147a88ade2a6f1a54e6ad8b03f6\",\"dweb:/ipfs/QmWt5gfi6Myfbq5jB7w5utxWS4GrgSnfjtAAJr1tKKCwdr\"]}},\"version\":1}"
+        }
+      }
+    },
+    "sources": {
+      "src/contracts/DAOTreasury.sol": {
+        "ast": {
+          "absolutePath": "src/contracts/DAOTreasury.sol",
+          "exportedSymbols": {
+            "DAOTreasury": [
+              2
+            ]
+          },
+          "id": 3,
+          "license": "MIT",
+          "nodeType": "SourceUnit",
+          "nodes": [
+            {
+              "id": 1,
+              "literals": [
+                "solidity",
+                "^",
+                "0.8",
+                ".4"
+              ],
+              "nodeType": "PragmaDirective",
+              "src": "62:23:0"
+            },
+            {
+              "abstract": false,
+              "baseContracts": [],
+              "contractDependencies": [],
+              "contractKind": "contract",
+              "fullyImplemented": true,
+              "id": 2,
+              "linearizedBaseContracts": [
+                2
+              ],
+              "name": "DAOTreasury",
+              "nameLocation": "96:11:0",
+              "nodeType": "ContractDefinition",
+              "nodes": [],
+              "scope": 3,
+              "src": "87:29:0",
+              "usedErrors": []
+            }
+          ],
+          "src": "62:54:0"
+        },
+        "id": 0
+      }
+    }
+  }
+}

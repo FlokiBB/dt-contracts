@@ -195,7 +195,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         ADDRESS.BUY_BACK_TREASURY_CONTRACT = buyBackTreasury_;
     }
 
-    function setRoyaltyReciver(address royaltyDistributerContract_) external onlyPlatform {
+    function setRoyaltyReceiver(address royaltyDistributerContract_) external onlyPlatform {
         ADDRESS.ROYALTY_DISTRIBUTOR_CONTRACT = royaltyDistributerContract_;
         _setRoyalties(ADDRESS.ROYALTY_DISTRIBUTOR_CONTRACT, MINTING_CONFIG.ROYALTY_FEE_PERCENT);
     }
@@ -313,14 +313,14 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function whitelistMinting(
         address addr_,
         uint8 maxQuantity_,
-        uint64 quantity_,
+        uint8 quantity_,
         WhiteListType whiteListType_,
         bytes calldata sig
     ) external payable whileWhiteListMintingIsActive {
         require(isWhitelisted(addr_, maxQuantity_, whiteListType_, sig), 'Bad Signature');
         require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Recive To Max Supply');
 
-        uint64 _aux = _getAux(addr_);
+        uint8 _aux = _getAux(addr_);
 
         require(_aux + quantity_ <= maxQuantity_, 'Receive To Max Quantity');
 
@@ -342,10 +342,10 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         uint8 maxQuantity_,
         WhiteListType whiteListType_,
         bytes calldata sig_
-    ) internal view returns (bool) {
+    ) public view returns (bool) {
         return
             ECDSA.recover(
-                keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)).toEthSignedMessageHash(),
+                keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)),
                 sig_
             ) == ADDRESS.WHITE_LIST_VERIFIER;
     }

@@ -68,7 +68,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         // For miscellaneous variable(s) pertaining to the address
         // (e.g. number of whitelist mint slots used).
         // If there are multiple variables, please pack them into a uint64.
-        uint64 aux;
+        uint8 aux;
     }
 
     // The tokenId of the next token to be minted.
@@ -204,7 +204,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
     /**
      * Returns the auxillary data for `owner`. (e.g. number of whitelist mint slots used).
      */
-    function _getAux(address owner) internal view returns (uint64) {
+    function _getAux(address owner) internal view returns (uint8) {
         if (owner == address(0)) revert AuxQueryForZeroAddress();
         return _addressData[owner].aux;
     }
@@ -213,7 +213,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * Sets the auxillary data for `owner`. (e.g. number of whitelist mint slots used).
      * If there are multiple variables, please pack them into a uint64.
      */
-    function _setAux(address owner, uint64 aux) internal {
+    function _setAux(address owner, uint8 aux) internal {
         if (owner == address(0)) revert AuxQueryForZeroAddress();
         _addressData[owner].aux = aux;
     }

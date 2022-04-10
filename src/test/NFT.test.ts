@@ -209,6 +209,11 @@ describe('NFT', function () {
 
   describe('#mint', () => {
     // test white list (normal and royal)
+    it('check isWhiteListed method', async () => {
+      const accounts = await ethers.getSigners();
+      
+
+    });    
     // test normal mint scenario cases
     // test mint when max supply is reached
     // test mint when max mint per address is reached
