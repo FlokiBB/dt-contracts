@@ -316,7 +316,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         WhiteListType whiteListType_,
         bytes calldata sig
     ) external payable whileWhiteListMintingIsActive {
-        require(isWhitelisted(msg.sender ,maxQuantity_, whiteListType_, sig), 'Bad Signature');
+        require(isWhitelisted(msg.sender, maxQuantity_, whiteListType_, sig), 'Bad Signature');
         require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Recive To Max Supply');
 
         uint8 _aux = _getAux(msg.sender);
