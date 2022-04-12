@@ -16,3 +16,5 @@ src/test/*.js
 #other
 .vscode
 venv
+
+artifacts

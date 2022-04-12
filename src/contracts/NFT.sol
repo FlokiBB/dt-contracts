@@ -311,26 +311,25 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
     // WhiteListMinting related functions.
     function whitelistMinting(
-        address addr_,
         uint8 maxQuantity_,
         uint8 quantity_,
         WhiteListType whiteListType_,
         bytes calldata sig
     ) external payable whileWhiteListMintingIsActive {
-        require(isWhitelisted(addr_, maxQuantity_, whiteListType_, sig), 'Bad Signature');
+        require(isWhitelisted(msg.sender ,maxQuantity_, whiteListType_, sig), 'Bad Signature');
         require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Recive To Max Supply');
 
-        uint8 _aux = _getAux(addr_);
+        uint8 _aux = _getAux(msg.sender);
 
         require(_aux + quantity_ <= maxQuantity_, 'Receive To Max Quantity');
 
         if (whiteListType_ == WhiteListType.ROYAL) {
-            _setAux(addr_, _aux + quantity_);
-            _safeMint(addr_, quantity_);
+            _setAux(msg.sender, _aux + quantity_);
+            _safeMint(msg.sender, quantity_);
         } else {
             require(quantity_ * MINTING_CONFIG.MINT_PRICE_IN_WEI <= msg.value, 'Not Enoughs Ether');
-            _setAux(addr_, _aux + quantity_);
-            _safeMint(addr_, quantity_);
+            _setAux(msg.sender, _aux + quantity_);
+            _safeMint(msg.sender, quantity_);
         }
         if (msg.value > 0) {
             _transferEth(ADDRESS.BUY_BACK_TREASURY_CONTRACT, msg.value);

@@ -26,6 +26,7 @@ describe('NFT', function () {
 
   const upgradeRequestFeeInWei_ = ethers.utils.parseEther('0.01');
 
+  // auction formula => AUCTION_DROP_PER_STEP: (START_PRICE - END_PRICE)/ (1 day in seconds(86400)) * (AUCTION_DROP_INTERVAL in seconds)
   const auctionConfig = [
     {
       START_PRICE: 50,
