@@ -43,7 +43,7 @@ describe('NFT', function () {
       END_PRICE: 1,
       AUCTION_DROP_INTERVAL: 375,
       AUCTION_DROP_PER_STEP: 5,
-  }];
+    }];
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners();
@@ -51,7 +51,7 @@ describe('NFT', function () {
     platformMultisigAddress = accounts[1].address;
     defiTitanAddress = accounts[2].address;
     buyBackTreasuryContractAddress = accounts[3].address;
-    whiteListVerifierAddress = accounts[4].address;
+    whiteListVerifierAddress = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
     royaltyDistributorAddress = accounts[5].address;
     const Contract = await ethers.getContractFactory("NFT");
     NFTContract = (await Contract.deploy(
@@ -159,7 +159,7 @@ describe('NFT', function () {
 
     it('should set auction config correctly', async () => {
       for (let i = 0; i < NumberOFTokenForAuction_; i++) {
-        const auction = await NFTContract.AUCTIONS(i+1);
+        const auction = await NFTContract.AUCTIONS(i + 1);
         expect(auction.START_PRICE).to.equal(auctionConfig[i].START_PRICE);
         expect(auction.END_PRICE).to.equal(auctionConfig[i].END_PRICE);
         expect(auction.START_TIME).to.equal(AuctionStartTime_ + i * AuctionDuration_);
@@ -177,7 +177,7 @@ describe('NFT', function () {
       await expect(NFTContract.connect(accounts[2]).buyBackToken(tokenId)).to.be.revertedWith('Only Humans');
     });
 
-    it('check currentness of tokenOfOwnerByIndex' ,async () => {
+    it('check currentness of tokenOfOwnerByIndex', async () => {
       const currentSupply = await NFTContract.totalSupply();
       expect(currentSupply).to.equal(NumberOFTokenForAuction_);
       const tokenIdByIndex = await NFTContract.tokenByIndex(NumberOFTokenForAuction_ - 1)
@@ -199,7 +199,7 @@ describe('NFT', function () {
       const price = await NFTContract.getAuctionPrice(day);
       console.log(`price of token ${tokenId} is ${price}`);
 
-    });    
+    });
     // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
     // test buy in auction . check currentness of the price decrement
     // check buy in auction for the day that is not coming yet
@@ -212,9 +212,86 @@ describe('NFT', function () {
     // test white list (normal and royal)
     it('check isWhiteListed method', async () => {
       const accounts = await ethers.getSigners();
-      
+      const address = accounts[1].address;
+      const numberOfTokenAllowToMint = 3
+      // 0 for normal whitelist and 1 for royal whitelist
+      const typeOfWhiteList = 0;
 
-    });    
+      const messageHash = ethers.utils.solidityKeccak256(
+        ['address', 'uint8', 'uint8'],
+        [address, numberOfTokenAllowToMint, typeOfWhiteList]
+      );
+      const messageHashBinary = ethers.utils.arrayify(messageHash);
+      const wallet = new ethers.Wallet("0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e");
+      const signature = await wallet.signMessage(messageHashBinary);
+
+      const verifyOnContract = await NFTContract.isWhitelisted(address, numberOfTokenAllowToMint, typeOfWhiteList, signature);
+      expect(verifyOnContract).to.equal(true);
+    });
+
+    it('normal whitelist check', async () => {
+      const accounts = await ethers.getSigners();
+      const address = accounts[9].address;
+      const numberOfTokenAllowToMint = 3
+      // 0 for normal whitelist and 1 for royal whitelist
+      const typeOfWhiteList = 0;
+
+      const messageHash = ethers.utils.solidityKeccak256(
+        ['address', 'uint8', 'uint8'],
+        [address, numberOfTokenAllowToMint, typeOfWhiteList]
+      );
+      const messageHashBinary = ethers.utils.arrayify(messageHash);
+      const wallet = new ethers.Wallet("0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e");
+      const signature = await wallet.signMessage(messageHashBinary);
+
+      await expect(
+        NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature)
+      ).to.be.revertedWith('Not Activated');
+
+      await NFTContract.connect(accounts[0]).startWhiteListMinting();
+
+      await expect(
+        NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature)
+      ).to.be.revertedWith('Not Enoughs Ether');
+
+      const tx = await NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature, {
+        value: ethers.utils.parseEther('0.2'),
+      });
+      await tx.wait();
+
+      const balance = await NFTContract.balanceOf(accounts[9].address);
+      expect(balance).to.equal(2);
+
+    });
+
+    it('royal whitelist check', async () => {
+      const accounts = await ethers.getSigners();
+      const address = accounts[8].address;
+      const numberOfTokenAllowToMint = 3
+      // 0 for normal whitelist and 1 for royal whitelist
+      const typeOfWhiteList = 1;
+
+      const messageHash = ethers.utils.solidityKeccak256(
+        ['address', 'uint8', 'uint8'],
+        [address, numberOfTokenAllowToMint, typeOfWhiteList]
+      );
+      const messageHashBinary = ethers.utils.arrayify(messageHash);
+      const wallet = new ethers.Wallet("0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e");
+      const signature = await wallet.signMessage(messageHashBinary);
+      await NFTContract.connect(accounts[0]).startWhiteListMinting();
+
+      await expect(
+        NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 4, typeOfWhiteList, signature)
+      ).to.be.revertedWith('Receive To Max Quantity');
+
+      const tx = await NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature);
+      await tx.wait();
+
+      const balance = await NFTContract.balanceOf(accounts[8].address);
+      expect(balance).to.equal(2);
+
+
+    });
     // test normal mint scenario cases
     // test mint when max supply is reached
     // test mint when max mint per address is reached
@@ -257,14 +334,14 @@ describe('NFT', function () {
 
   describe('#TokenURI', () => { });
 
-  describe('#Utils', () => { 
+  describe('#Utils', () => {
     it('test receive and fall back', async () => {
       const accounts = await ethers.getSigners();
 
       // test receive 
       await expect(accounts[6].sendTransaction({
-        to: NFTContract.address, 
-        value: ethers.utils.parseEther('0.01'), 
+        to: NFTContract.address,
+        value: ethers.utils.parseEther('0.01'),
         gasLimit: 5000000
       })).to.be.revertedWith('Not Allowed');
 
@@ -276,7 +353,7 @@ describe('NFT', function () {
       })).to.be.revertedWith('Call Valid Function');
 
 
-    });    
+    });
   });
 
 });
