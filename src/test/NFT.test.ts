@@ -198,6 +198,24 @@ describe('NFT', function () {
       const day = tokenId + 1;
       const price = await NFTContract.getAuctionPrice(day);
       console.log(`price of token ${tokenId} is ${price}`);
+      // expect(0.1).to.be.closeTo(0.2, 0.1, 'no why fail??');
+
+      // const sevenDays = 7 * 24 * 60 * 60;
+
+      // const blockNumBefore = await ethers.provider.getBlockNumber();
+      // const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+      // const timestampBefore = blockBefore.timestamp;
+
+      // await ethers.provider.send('evm_increaseTime', [sevenDays]);
+      // await ethers.provider.send('evm_mine', []);
+
+      // const blockNumAfter = await ethers.provider.getBlockNumber();
+      // const blockAfter = await ethers.provider.getBlock(blockNumAfter);
+      // const timestampAfter = blockAfter.timestamp;
+
+      // expect(blockNumAfter).to.be.equal(blockNumBefore + 1);
+      // expect(timestampAfter).to.be.equal(timestampBefore + sevenDays);
+
 
     });
     // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
@@ -331,7 +349,6 @@ describe('NFT', function () {
       expect(balance).to.equal(3);
 
       await expect(NFTContract.publicMint(270)).to.be.revertedWith('Receive To Max Supply');
-      // expect(0.1).to.be.closeTo(0.2, 0.1);
     });
   });
 
