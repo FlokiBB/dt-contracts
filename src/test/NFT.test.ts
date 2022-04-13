@@ -5,7 +5,7 @@ import { NFT } from '../types';
 describe('NFT', function () {
   let NFTContract: NFT;
 
-  const maxSupply_ = 100;
+  const maxSupply_ = 250;
 
   let ownerAddress: string;
   let platformMultisigAddress: string;
@@ -254,6 +254,8 @@ describe('NFT', function () {
         NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature)
       ).to.be.revertedWith('Not Enoughs Ether');
 
+      const daoTreasuryAddress = accounts[3].address;
+      const OldDaoTreasuryBalance = await ethers.provider.getBalance(daoTreasuryAddress);
       const tx = await NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature, {
         value: ethers.utils.parseEther('0.2'),
       });
@@ -262,12 +264,15 @@ describe('NFT', function () {
       const balance = await NFTContract.balanceOf(accounts[9].address);
       expect(balance).to.equal(2);
 
+      const DaoTreasuryBalance = await ethers.provider.getBalance(daoTreasuryAddress);
+      expect(DaoTreasuryBalance).to.equal(ethers.utils.parseEther('0.2').add(OldDaoTreasuryBalance));
+
     });
 
     it('royal whitelist check', async () => {
       const accounts = await ethers.getSigners();
       const address = accounts[8].address;
-      const numberOfTokenAllowToMint = 3
+      const numberOfTokenAllowToMint = 150
       // 0 for normal whitelist and 1 for royal whitelist
       const typeOfWhiteList = 1;
 
@@ -281,23 +286,53 @@ describe('NFT', function () {
       await NFTContract.connect(accounts[0]).startWhiteListMinting();
 
       await expect(
-        NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 4, typeOfWhiteList, signature)
+        NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 160, typeOfWhiteList, signature)
       ).to.be.revertedWith('Receive To Max Quantity');
 
-      const tx = await NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature);
+      await expect(
+        NFTContract.connect(accounts[8]).whitelistMinting(240, 160, typeOfWhiteList, signature)
+      ).to.be.revertedWith('Bad Signature');
+
+      const tx = await NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 150, typeOfWhiteList, signature);
       await tx.wait();
 
       const balance = await NFTContract.balanceOf(accounts[8].address);
-      expect(balance).to.equal(2);
+      expect(balance).to.equal(150);
 
 
     });
     // test normal mint scenario cases
-    // test mint when max supply is reached
-    // test mint when max mint per address is reached
-    // test mint when auction is not started
-    // test mint when auction is ended
-    // test mint when not enough balance
+    it('normal mint check', async () => {
+      const accounts = await ethers.getSigners();
+
+      await expect(NFTContract.publicMint(4)).to.be.revertedWith('Not Activated');
+
+
+      await expect(
+         NFTContract.connect(accounts[0]).startPublicMinting()
+      ).to.be.revertedWith('Priority Issue');
+
+      await NFTContract.connect(accounts[0]).startWhiteListMinting();
+      await NFTContract.connect(accounts[0]).startPublicMinting();
+
+      const publicMintState = (await NFTContract.STATE()).MINTING_IS_ACTIVE
+      expect(publicMintState).to.equal(true);
+
+      await expect(NFTContract.publicMint(4)).to.be.revertedWith('Receive To Max Mint Per Address');
+
+      await expect(NFTContract.publicMint(3)).to.be.revertedWith('Not Enoughs Ether');
+
+      const tx = await NFTContract.connect(accounts[10]).publicMint(3, {
+        value: MintPriceInWei_.mul(3),
+      });
+      await tx.wait();
+
+      const balance = await NFTContract.balanceOf(accounts[10].address);
+      expect(balance).to.equal(3);
+
+      await expect(NFTContract.publicMint(270)).to.be.revertedWith('Receive To Max Supply');
+      // expect(0.1).to.be.closeTo(0.2, 0.1);
+    });
   });
 
   describe('#burn', () => {
@@ -327,10 +362,6 @@ describe('NFT', function () {
 
   describe('#RevealArt', () => {
   });
-
-  describe('#EIP2982', () => { });
-
-  describe('#CustomOwnable', () => { });
 
   describe('#TokenURI', () => { });
 

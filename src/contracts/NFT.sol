@@ -278,7 +278,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     }
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
-        require(_totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Recive To Max Supply');
+        require(_totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Receive To Max Supply');
         require(configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Configs Length');
 
         _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
@@ -317,7 +317,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         bytes calldata sig
     ) external payable whileWhiteListMintingIsActive {
         require(isWhitelisted(msg.sender, maxQuantity_, whiteListType_, sig), 'Bad Signature');
-        require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Recive To Max Supply');
+        require(_totalMinted() + quantity_ <= MAX_SUPPLY, 'Receive To Max Supply');
 
         uint8 _aux = _getAux(msg.sender);
 
@@ -353,6 +353,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     // Minting related functions.
 
     function publicMint(uint256 quantity) external payable whileMintingIsActive {
+        require(_totalMinted() + quantity <= MAX_SUPPLY, 'Receive To Max Supply');
         require(
             _numberMinted(msg.sender) + quantity <= MINTING_CONFIG.MAX_MINT_PER_ADDRESS,
             'Receive To Max Mint Per Address'
