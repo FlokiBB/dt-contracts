@@ -522,9 +522,8 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         uint256 tokenId
     ) internal {
         TokenOwnership memory prevOwnership = ownershipOf(tokenId);
-        
-        if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
 
+        if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
 
         // Clear approvals from the previous owner
         _approve(address(0), tokenId, prevOwnership.addr);
