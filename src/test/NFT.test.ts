@@ -232,12 +232,33 @@ describe('NFT', function () {
         NFTContract.connect(accounts[2]).buyAGodInAuction(day, { value: afterPrice.sub(1) })
       ).to.be.revertedWith('Not Enough Ether');
 
+      const platformBalanceBefore = await ethers.provider.getBalance(accounts[1].address);
       await NFTContract.connect(accounts[11]).buyAGodInAuction(day, { value: afterPrice });
       const owner = await NFTContract.ownerOf(tokenId);
       expect(owner).to.equal(accounts[11].address);
 
+      const platformBalanceAfter = await ethers.provider.getBalance(accounts[1].address);
+      expect(platformBalanceAfter.sub(platformBalanceBefore)).to.equal(afterPrice);
 
+      await expect(
+        NFTContract.connect(accounts[2]).buyAGodInAuction(day, { value: afterPrice })
+      ).to.be.revertedWith('Already Sold');
+
+      await expect(
+        NFTContract.connect(accounts[2]).buyAGodInAuction(day + 1)
+      ).to.be.revertedWith('Not Started Yet');
+
+      const TowDays = 2 * 24 * 60 * 60;
+      await ethers.provider.send('evm_increaseTime', [TowDays]);
+      await ethers.provider.send('evm_mine', []);
       
+      await expect(
+        NFTContract.connect(accounts[2]).buyAGodInAuction(day + 1)
+      ).to.be.revertedWith('Expired');
+
+      await expect(
+        NFTContract.connect(accounts[2]).buyAGodInAuction(day + 11, { value: afterPrice })
+      ).to.be.revertedWith('Day Is Out Of Range');
 
     });
     // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)

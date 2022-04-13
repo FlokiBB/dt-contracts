@@ -256,6 +256,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         _auctionTransfer(ADDRESS.DECENTRAL_TITAN, msg.sender, auction.TOKEN_ID);
 
         _transferEth(ADDRESS.PLATFORM, msg.value);
+        AUCTIONS[day].IS_SOLD = true;
     }
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
