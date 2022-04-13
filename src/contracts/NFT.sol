@@ -250,10 +250,10 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
 
         uint256 currentPrice = _getAuctionPrice(auction);
 
-        require(currentPrice <= auction.END_PRICE, 'Receive To Base Price');
+        require(auction.END_PRICE <= currentPrice, 'Receive To Base Price');
         require(currentPrice <= msg.value, 'Not Enough Ether');
 
-        transferFrom(ADDRESS.DECENTRAL_TITAN, msg.sender, auction.TOKEN_ID);
+        _auctionTransfer(ADDRESS.DECENTRAL_TITAN, msg.sender, auction.TOKEN_ID);
 
         _transferEth(ADDRESS.PLATFORM, msg.value);
     }
@@ -298,15 +298,8 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
                 false
             );
             AUCTIONS[i + 1] = _auction;
-            _defiTitanAuctionApproval(i);
             TOKEN_IS_GOD[i] = true;
         }
-    }
-
-    function _defiTitanAuctionApproval(uint8 tokenId) private {
-        TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(ownership.addr == ADDRESS.DECENTRAL_TITAN, 'Just For DECENTRAL_TITAN');
-        _approve(address(this), tokenId, ADDRESS.DECENTRAL_TITAN);
     }
 
     // WhiteListMinting related functions.

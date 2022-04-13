@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 import { NFT } from '../types';
 
@@ -19,10 +20,10 @@ describe('NFT', function () {
 
   const MintPriceInWei_ = ethers.utils.parseEther('0.05');
   const MaxMintPerAddress_ = 3;
-  const AuctionStartTime_ = Date.now(); // set current epoch time
   const AuctionDuration_ = 86400 // 1 day
   const NumberOFTokenForAuction_ = 3;
   const RoyaltyFeePercent_ = 10;
+  let AuctionStartTime_: number;
 
   const upgradeRequestFeeInWei_ = ethers.utils.parseEther('0.01');
 
@@ -54,6 +55,7 @@ describe('NFT', function () {
     whiteListVerifierAddress = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
     royaltyDistributorAddress = accounts[5].address;
     const Contract = await ethers.getContractFactory("NFT");
+    AuctionStartTime_ = (await ethers.provider.getBlock('latest')).timestamp;
     NFTContract = (await Contract.deploy(
       maxSupply_,
       {
@@ -193,20 +195,21 @@ describe('NFT', function () {
 
   describe('#buyAGodInAuction', () => {
     // test buy in auction in normal case
-    it('should buy a god in auction in normal case', async () => {
+    it('auction test', async () => {
+      const accounts = await ethers.getSigners();
       const tokenId = 0;
       const day = tokenId + 1;
       const price = await NFTContract.getAuctionPrice(day);
-      console.log(`price of token ${tokenId} is ${price}`);
+      expect(price).to.equal(auctionConfig[tokenId].START_PRICE);
       // expect(0.1).to.be.closeTo(0.2, 0.1, 'no why fail??');
 
-      const sevenDays = 7 * 24 * 60 * 60;
+      const time = 40 * 60; // 40 minutes
 
       const blockNumBefore = await ethers.provider.getBlockNumber();
       const blockBefore = await ethers.provider.getBlock(blockNumBefore);
       const timestampBefore = blockBefore.timestamp;
 
-      await ethers.provider.send('evm_increaseTime', [sevenDays]);
+      await ethers.provider.send('evm_increaseTime', [time]);
       await ethers.provider.send('evm_mine', []);
 
       const blockNumAfter = await ethers.provider.getBlockNumber();
@@ -214,8 +217,27 @@ describe('NFT', function () {
       const timestampAfter = blockAfter.timestamp;
 
       expect(blockNumAfter).to.be.equal(blockNumBefore + 1);
-      expect(timestampAfter).to.be.closeTo(timestampBefore + sevenDays , 2);
+      expect(timestampAfter).to.be.closeTo(timestampBefore + time, 2);
 
+      const step = time / auctionConfig[tokenId].AUCTION_DROP_INTERVAL;
+      const calcPrice = auctionConfig[tokenId].START_PRICE.sub(
+        auctionConfig[tokenId].AUCTION_DROP_PER_STEP.mul(
+          parseInt(step.toString())
+        )
+      );
+      const afterPrice = await NFTContract.getAuctionPrice(day);
+      expect(afterPrice).to.equal(calcPrice);
+
+      await expect(
+        NFTContract.connect(accounts[2]).buyAGodInAuction(day, { value: afterPrice.sub(1) })
+      ).to.be.revertedWith('Not Enough Ether');
+
+      await NFTContract.connect(accounts[11]).buyAGodInAuction(day, { value: afterPrice });
+      const owner = await NFTContract.ownerOf(tokenId);
+      expect(owner).to.equal(accounts[11].address);
+
+
+      
 
     });
     // test buy in auction when in not sold in correct time ( should belong to defi titian and not buyable)
@@ -327,7 +349,7 @@ describe('NFT', function () {
 
 
       await expect(
-         NFTContract.connect(accounts[0]).startPublicMinting()
+        NFTContract.connect(accounts[0]).startPublicMinting()
       ).to.be.revertedWith('Priority Issue');
 
       await NFTContract.connect(accounts[0]).startWhiteListMinting();
