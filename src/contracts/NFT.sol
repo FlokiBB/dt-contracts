@@ -10,7 +10,7 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
-// TODO: @audit diffrent compiler version issue with library
+// TODO: @audit diffrent compiler version issue between library and main contract
 contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
@@ -434,7 +434,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         require(sent, 'Transfer Failed');
     }
 
-    // @audit i think we dont need accsess modifire like onlyOwner for this function double check it.
+    // @audit i think we dont need accsess modifire like onlyOwner for this function. double check it.
     function setOwnersExplicit(uint256 quantity) external nonReentrant {
         _setOwnersExplicit(quantity);
     }
@@ -447,5 +447,5 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         revert('Call Valid Function');
     }
 
-    // @audit are we need a withdraw function due we don't keep any in the contract?
+    // @audit are we need a withdraw function due we don't keep any fund in the contract?
 }
