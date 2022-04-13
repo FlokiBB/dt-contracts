@@ -29,20 +29,20 @@ describe('NFT', function () {
   // auction formula => AUCTION_DROP_PER_STEP: (START_PRICE - END_PRICE)/ (1 day in seconds(86400)) * (AUCTION_DROP_INTERVAL in seconds)
   const auctionConfig = [
     {
-      START_PRICE: 50,
-      END_PRICE: 5,
-      AUCTION_DROP_INTERVAL: 1875,
-      AUCTION_DROP_PER_STEP: 25,
+      START_PRICE: ethers.utils.parseEther('50'),
+      END_PRICE: ethers.utils.parseEther('5'),
+      AUCTION_DROP_INTERVAL: 600,
+      AUCTION_DROP_PER_STEP: ethers.utils.parseEther('0.3125'),
     }, {
-      START_PRICE: 5,
-      END_PRICE: 2,
-      AUCTION_DROP_INTERVAL: 375,
-      AUCTION_DROP_PER_STEP: 125,
+      START_PRICE: ethers.utils.parseEther('5'),
+      END_PRICE: ethers.utils.parseEther('2'),
+      AUCTION_DROP_INTERVAL: 600,
+      AUCTION_DROP_PER_STEP: ethers.utils.parseEther('0.02083333'),
     }, {
-      START_PRICE: 10,
-      END_PRICE: 1,
-      AUCTION_DROP_INTERVAL: 375,
-      AUCTION_DROP_PER_STEP: 5,
+      START_PRICE: ethers.utils.parseEther('10'),
+      END_PRICE: ethers.utils.parseEther('1'),
+      AUCTION_DROP_INTERVAL: 600,
+      AUCTION_DROP_PER_STEP: ethers.utils.parseEther('0.0625'),
     }];
 
   beforeEach(async () => {
@@ -200,21 +200,21 @@ describe('NFT', function () {
       console.log(`price of token ${tokenId} is ${price}`);
       // expect(0.1).to.be.closeTo(0.2, 0.1, 'no why fail??');
 
-      // const sevenDays = 7 * 24 * 60 * 60;
+      const sevenDays = 7 * 24 * 60 * 60;
 
-      // const blockNumBefore = await ethers.provider.getBlockNumber();
-      // const blockBefore = await ethers.provider.getBlock(blockNumBefore);
-      // const timestampBefore = blockBefore.timestamp;
+      const blockNumBefore = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+      const timestampBefore = blockBefore.timestamp;
 
-      // await ethers.provider.send('evm_increaseTime', [sevenDays]);
-      // await ethers.provider.send('evm_mine', []);
+      await ethers.provider.send('evm_increaseTime', [sevenDays]);
+      await ethers.provider.send('evm_mine', []);
 
-      // const blockNumAfter = await ethers.provider.getBlockNumber();
-      // const blockAfter = await ethers.provider.getBlock(blockNumAfter);
-      // const timestampAfter = blockAfter.timestamp;
+      const blockNumAfter = await ethers.provider.getBlockNumber();
+      const blockAfter = await ethers.provider.getBlock(blockNumAfter);
+      const timestampAfter = blockAfter.timestamp;
 
-      // expect(blockNumAfter).to.be.equal(blockNumBefore + 1);
-      // expect(timestampAfter).to.be.equal(timestampBefore + sevenDays);
+      expect(blockNumAfter).to.be.equal(blockNumBefore + 1);
+      expect(timestampAfter).to.be.closeTo(timestampBefore + sevenDays , 2);
 
 
     });
