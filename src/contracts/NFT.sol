@@ -394,11 +394,11 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         if (TOKEN_IS_UPGRADED[id]) {
             return string(abi.encodePacked(_UPGRADED_TOKEN_CID[id]));
         } else if (TOKEN_IS_GOD[id]) {
-            return string(abi.encodePacked(IPFS.GOD_CID, Strings.toString(id)));
+            return string(abi.encodePacked(IPFS.GOD_CID, '/', Strings.toString(id)));
         } else if (STATE.ART_IS_REVEALED) {
-            return string(abi.encodePacked(IPFS.ART_CID, Strings.toString(id)));
+            return string(abi.encodePacked(IPFS.ART_CID, '/', Strings.toString(id)));
         } else {
-            return string(abi.encodePacked(IPFS.NOT_REVEALED_ART_CID, Strings.toString(id)));
+            return string(abi.encodePacked(IPFS.NOT_REVEALED_ART_CID));
         }
     }
 
@@ -406,7 +406,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
         require(_exists(tokenId), 'Token Not Exists');
         TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(msg.sender == ownership.addr, 'Not Owner');
+        require(msg.sender == ownership.addr, 'Is Not Owner');
         _burn(tokenId);
         // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender as a parameter
     }

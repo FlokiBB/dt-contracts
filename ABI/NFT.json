@@ -30,6 +30,7 @@
   "function TOKEN_IS_UPGRADED(uint16) view returns (bool)",
   "function UPGRADE_REQUEST_FEE_IN_WEI() view returns (uint256)",
   "function UPGRADE_REQUEST_FEE_IS_PAID(uint256) view returns (bool)",
+  "function _ownerships(uint256) view returns (address, uint64, bool)",
   "function approve(address,uint256)",
   "function balanceOf(address) view returns (uint256)",
   "function buyAGodInAuction(uint8) payable",

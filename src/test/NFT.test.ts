@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 import { NFT } from '../types';
 
@@ -15,8 +14,9 @@ describe('NFT', function () {
   let whiteListVerifierAddress: string;
   let royaltyDistributorAddress: string;
 
-  const godCID_ = 'ipfs://GodCID';
-  const notRevealedArtCID_ = 'ipfs://NotRevealedArtCID';
+  const godCID_ = 'ipfs://QmXDwhDEc1seGdaCSccrUMfPBwTx2TL22yTxNxd1UoSXVs';
+  const notRevealedArtCID_ = 'ipfs://QmeEHxgXssbcN9bvYszFrHSw5YBYAtKxrA1ypzAzzFENB9';
+  const afterRevealArtCID_ = 'ipfs://QmNMgz4h3NHWdy5fFGCZRgxEJzxMVKWRp3ykSsbhDRK5RE';
 
   const MintPriceInWei_ = ethers.utils.parseEther('0.05');
   const MaxMintPerAddress_ = 3;
@@ -251,7 +251,7 @@ describe('NFT', function () {
       const TowDays = 2 * 24 * 60 * 60;
       await ethers.provider.send('evm_increaseTime', [TowDays]);
       await ethers.provider.send('evm_mine', []);
-      
+
       await expect(
         NFTContract.connect(accounts[2]).buyAGodInAuction(day + 1)
       ).to.be.revertedWith('Expired');
@@ -363,7 +363,7 @@ describe('NFT', function () {
 
     });
     // test normal mint scenario cases
-    it('normal mint check', async () => {
+    it('mint & reveal & upgrade & burn', async () => {
       const accounts = await ethers.getSigners();
 
       await expect(NFTContract.publicMint(4)).to.be.revertedWith('Not Activated');
@@ -392,6 +392,61 @@ describe('NFT', function () {
       expect(balance).to.equal(3);
 
       await expect(NFTContract.publicMint(270)).to.be.revertedWith('Receive To Max Supply');
+
+      // token Uri checking
+      const tokenURI = await NFTContract.tokenURI(1);
+      expect(tokenURI).to.equal(godCID_.concat('/1'));
+
+      expect((await NFTContract.STATE()).ART_IS_REVEALED).to.equal(false);
+      const tokenURI2 = await NFTContract.tokenURI(5);
+      expect(
+        tokenURI2
+      ).to.equal(
+        notRevealedArtCID_
+      );
+
+      // test reveal art 
+
+      await expect(
+        NFTContract.connect(accounts[0]).revealArt('')
+      ).to.be.revertedWith('CID Is Empty');
+
+      await NFTContract.connect(accounts[0]).revealArt(afterRevealArtCID_);
+
+      expect((await NFTContract.STATE()).ART_IS_REVEALED).to.equal(true);
+
+      // test burn
+
+      await expect(
+        NFTContract.connect(accounts[0]).buyBackToken(10000)
+      ).to.be.revertedWith('Token Not Exists');
+
+      await expect(
+        NFTContract.connect(accounts[0]).buyBackToken(1)
+      ).to.be.revertedWith('Only Humans');
+
+      await expect(
+        NFTContract.connect(accounts[0]).buyBackToken(4)
+      ).to.be.revertedWith('Is Not Owner');
+
+      await NFTContract.connect(accounts[10]).buyBackToken(4);
+
+      await expect(
+        NFTContract.tokenURI(4)
+      ).to.be.revertedWith('Token Not Exists');
+
+      expect (
+        (await NFTContract._ownerships(4)).burned
+      ).to.be.equal(true);
+
+      await NFTContract.connect(accounts[12]).publicMint(3, {
+        value: MintPriceInWei_.mul(3),
+      });
+
+      expect(
+        await NFTContract.ownerOf(7)
+      ).to.be.equal(accounts[12].address);
+
     });
   });
 
@@ -419,11 +474,6 @@ describe('NFT', function () {
   describe('#setApprovalForAll', () => {
 
   });
-
-  describe('#RevealArt', () => {
-  });
-
-  describe('#TokenURI', () => { });
 
   describe('#Utils', () => {
     it('test receive and fall back', async () => {
