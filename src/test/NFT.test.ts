@@ -435,7 +435,7 @@ describe('NFT', function () {
         NFTContract.tokenURI(4)
       ).to.be.revertedWith('Token Not Exists');
 
-      expect (
+      expect(
         (await NFTContract._ownerships(4)).burned
       ).to.be.equal(true);
 
@@ -447,17 +447,58 @@ describe('NFT', function () {
         await NFTContract.ownerOf(7)
       ).to.be.equal(accounts[12].address);
 
+      // test upgrade
+
+      await expect(
+        NFTContract.connect(accounts[12]).upgradeTokenRequestFee(1)
+      ).to.be.revertedWith('Not Finished');
+
+      await expect(
+        NFTContract.connect(accounts[0]).finishMinting()
+      ).to.be.revertedWith('Only DECENTRAL_TITAN');
+
+      await NFTContract.connect(accounts[2]).finishMinting()
+
+      await expect(
+        NFTContract.connect(accounts[12]).upgradeTokenRequestFee(1)
+      ).to.be.revertedWith('Only Humans');
+
+      await expect(
+        NFTContract.connect(accounts[12]).upgradeTokenRequestFee(600)
+      ).to.be.revertedWith('Token Not Exists');
+
+      await expect(
+        NFTContract.connect(accounts[12]).upgradeTokenRequestFee(7)
+      ).to.be.revertedWith('Not Enoughs Ether');
+
+      await NFTContract.connect(accounts[12]).upgradeTokenRequestFee(7, {
+        value: upgradeRequestFeeInWei_,
+      });
+
+      expect(
+        await NFTContract.UPGRADE_REQUEST_FEE_IS_PAID(7)
+      ).to.be.equal(true);
+
+      const upgradeCID = 'IPFS://QmTF2PivsUf3PQqrTAamNczxNXRR3Mj1jwJ41GaoNs3e89'
+      await NFTContract.connect(accounts[0]).upgradeToken(upgradeCID, 7, false);
+
+      await expect(
+        NFTContract.connect(accounts[0]).upgradeToken(upgradeCID, 7, false)
+      ).to.be.revertedWith('Upgrade Request Fee Not Paid');
+
+      expect(
+        await NFTContract.tokenURI(7)
+      ).to.be.equal(upgradeCID);
+
+      expect(
+        await NFTContract.UPGRADE_REQUEST_FEE_IS_PAID(7)
+      ).to.be.equal(false);
+
     });
-  });
-
-  describe('#burn', () => {
-    // buyback 
-    // god are not allowed to burn
-  });
-
-  describe('#upgrade', () => {
 
   });
+
+
 
   describe('#transfer', () => {
 
