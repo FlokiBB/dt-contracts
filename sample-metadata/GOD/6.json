@@ -1,0 +1,18 @@
+{
+  "name": "test-salva #6",
+  "description": "first test for full cards",
+  "image": "To be replaced",
+  "edition": 6,
+  "attributes": [
+    { "trait_type": "guild", "value": "Amazing Girls" },
+    { "trait_type": "abbility", "value": "1-will" },
+    { "trait_type": "community_num", "value": "1" },
+    { "trait_type": "respective_num", "value": "65" },
+    { "trait_type": "hair", "value": "Hair 03" },
+    { "trait_type": "nose", "value": "Nose 02" },
+    { "trait_type": "eyes", "value": "Eyes 05" },
+    { "trait_type": "lips", "value": "Lips 05" },
+    { "trait_type": "eyebrows", "value": "Eyebrows 02" },
+    { "trait_type": "head", "value": "HEAD" }
+  ]
+}

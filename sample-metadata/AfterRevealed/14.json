@@ -1,0 +1,18 @@
+{
+  "name": "test-salva #14",
+  "description": "first test for full cards",
+  "image": "To be replaced",
+  "edition": 14,
+  "attributes": [
+    { "trait_type": "guild", "value": "The Beastriders" },
+    { "trait_type": "abbility", "value": "3-will" },
+    { "trait_type": "community_num", "value": "9" },
+    { "trait_type": "respective_num", "value": "80" },
+    { "trait_type": "hair", "value": "Eyebrows 05" },
+    { "trait_type": "nose", "value": "Nose 02" },
+    { "trait_type": "eyes", "value": "Eyes 03" },
+    { "trait_type": "lips", "value": "Lips 05" },
+    { "trait_type": "eyebrows", "value": "Eyebrows 03" },
+    { "trait_type": "head", "value": "HEAD" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "test-salva #10",
+  "description": "first test for full cards",
+  "image": "To be replaced",
+  "edition": 10,
+  "attributes": [
+    { "trait_type": "guild", "value": "The GODS" },
+    { "trait_type": "name", "value": "Hades" }
+  ]
+}

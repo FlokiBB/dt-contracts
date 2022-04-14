@@ -1,0 +1,18 @@
+{
+  "name": "test-salva #8",
+  "description": "first test for full cards",
+  "image": "To be replaced",
+  "edition": 8,
+  "attributes": [
+    { "trait_type": "guild", "value": "The Thieves" },
+    { "trait_type": "abbility", "value": "3-will" },
+    { "trait_type": "community_num", "value": "7" },
+    { "trait_type": "respective_num", "value": "35" },
+    { "trait_type": "hair", "value": "Hair 05" },
+    { "trait_type": "nose", "value": "Nose 02" },
+    { "trait_type": "eyes", "value": "Eyes 02" },
+    { "trait_type": "lips", "value": "Lips 05" },
+    { "trait_type": "eyebrows", "value": "Eyebrows 04" },
+    { "trait_type": "head", "value": "HEAD" }
+  ]
+}

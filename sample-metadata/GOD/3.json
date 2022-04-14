@@ -1,0 +1,18 @@
+{
+  "name": "test-salva #3",
+  "description": "first test for full cards",
+  "image": "To be replaced",
+  "edition": 3,
+  "attributes": [
+    { "trait_type": "guild", "value": "Amazing Boys" },
+    { "trait_type": "abbility", "value": "3-will" },
+    { "trait_type": "community_num", "value": "7" },
+    { "trait_type": "respective_num", "value": "48" },
+    { "trait_type": "hair", "value": "Hair 05" },
+    { "trait_type": "nose", "value": "Nose 01" },
+    { "trait_type": "eyes", "value": "Eyes 05" },
+    { "trait_type": "lips", "value": "Lips 02" },
+    { "trait_type": "eyebrows", "value": "Eyebrows 02" },
+    { "trait_type": "head", "value": "HEAD" }
+  ]
+}
