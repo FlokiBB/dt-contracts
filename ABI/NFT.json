@@ -68,6 +68,7 @@
   "function totalSupply() view returns (uint256)",
   "function transferFrom(address,address,uint256)",
   "function transferOwnership(address)",
+  "function updateCID(string,string)",
   "function upgradeToken(string,uint16,bool)",
   "function upgradeTokenRequestFee(uint16) payable",
   "function whitelistMinting(uint8,uint8,uint8,bytes) payable"

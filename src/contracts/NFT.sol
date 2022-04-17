@@ -234,6 +234,18 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         STATE.FINISHED = true;
     }
 
+    function updateCID(string memory GodCid, string memory HumanCid) external onlyPlatform {
+        uint256 len1 = bytes(GodCid).length;
+        if ( len1 > 0 ) {
+            IPFS.GOD_CID = GodCid;
+        }
+
+        uint256 len2 = bytes(HumanCid).length;
+        if ( len2 > 0 ) {
+            IPFS.ART_CID = HumanCid;
+        }
+    }
+
     // Auction related functions.
 
     function buyAGodInAuction(uint8 day) external payable whileAuctionIsActive {
