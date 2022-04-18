@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - development
+      - master
   pull_request:
     branches:
       - development
+      - master
 
 jobs:
   run-linters:
@@ -96,5 +98,10 @@ jobs:
         run: |
           pip3 install slither-analyzer
       - name: Run slither
-        run: slither .
+        run: slither --sarif=results.sarif .
         continue-on-error: true
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: ./results.sarif
