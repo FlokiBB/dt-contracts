@@ -20,11 +20,6 @@ myth a src/contracts/example.sol
 
 ---
 
-we should use `Goerli` as testnet
-(because it is the only mainnet will be remain functional in post-merge world)
-
----
-
 for local test with HardHat
 
 ```
@@ -52,6 +47,14 @@ TODO: active SARIF in slither github action after publicizing the repo
 ---
 
 for exporting abi
+
+```
+npx hardhat export-abi
+```
+
+---
+
+for showing test coverage
 
 ```
 npx hardhat export-abi
