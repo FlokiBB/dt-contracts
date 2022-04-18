@@ -1,1 +1,2 @@
-*.sol linguist-language=Solidity
+*.sol linguist-language=Solidity 
+*.raku linguist-vendored
