@@ -8,12 +8,12 @@ pragma solidity ^0.8.4;
 // contract DAOTreasury {
 //     uint256 public collectionSupply;
 //     uint256 public MintPrice;
-    
+
 //     constructor()  {
 //         collectionSupply = 0;
 //         MintPrice = 1;
 //     }
-    
+
 //     function daoTransfer (address _to, uint256 _value) {
 //         require(_to != address(0));
 //         require(_value > 0);
@@ -55,6 +55,5 @@ pragma solidity ^0.8.4;
 //         require(_amount > 0);
 //         collectionSupply += _amount;
 //     }
-
 
 // }
