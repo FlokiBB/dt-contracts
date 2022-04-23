@@ -1,10 +1,10 @@
-// // SPDX-License-Identifier: MIT
-// // Creator: DDD(DeDogma DAO)
+// SPDX-License-Identifier: MIT
+// Creator: DDD(DeDogma DAO)
 
-// pragma solidity ^0.8.4;
+pragma solidity ^0.8.4;
 
-// // TODO: think about contract deploymnet pirority and change NFT contract constructor
-// // TODO: write this function pausable and in future proof maner
+// TODO: think about contract deploymnet pirority and change NFT contract constructor
+// TODO: write this function pausable and in future proof maner
 // contract DAOTreasury {
 //     uint256 public collectionSupply;
 //     uint256 public MintPrice;
