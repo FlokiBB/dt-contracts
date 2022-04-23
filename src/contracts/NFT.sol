@@ -10,6 +10,7 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
+// TODO: msg.sender or _msgSender()
 // TODO: @audit diffrent compiler version issue between library and main contract
 contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
