@@ -3,13 +3,14 @@
 
 pragma solidity ^0.8.4;
 
-import './DTERC721A.sol';
-import './DTOwnable.sol';
-import './IERC2981Royalties.sol';
+import './library/DTERC721A.sol';
+import './library/DTOwnable.sol';
+import './interfaces/IERC2981Royalties.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
+// add test for transferfrom and approve
 // TODO: msg.sender or _msgSender()
 // TODO: @audit diffrent compiler version issue between library and main contract
 contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
