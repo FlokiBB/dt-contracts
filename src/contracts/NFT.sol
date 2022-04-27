@@ -70,7 +70,7 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
     ContractIPFS public ipfs;
 
 
-    uint256 constant public MINT_PRICE_IN_WEI = 50000000000000000;
+    uint256 constant public MINT_PRICE_IN_WEI = 0.05 * 10**18;
     uint16 constant public MAX_MINT_PER_ADDRESS = 3;
     uint256 immutable public AUCTION_START_TIME ; // epoch time
     uint8 constant public NUMBER_OF_TOKEN_FOR_AUCTION = 3;
