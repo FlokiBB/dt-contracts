@@ -15,7 +15,7 @@ import '@openzeppelin/contracts/utils/Context.sol';
  * `onlyOwner`, which can be applied to your functions to restrict their use to
  * the owner.
  */
-abstract contract DTOwnable is Context {
+abstract contract DTAuth is Context {
     address private _owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);

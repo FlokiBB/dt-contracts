@@ -5,8 +5,6 @@ import { NFT } from '../types';
 describe('NFT', function () {
   let NFTContract: NFT;
 
-  const maxSupply_ = 250;
-
   let ownerAddress: string;
   let platformMultisigAddress: string;
   let defiTitanAddress: string;
@@ -30,20 +28,17 @@ describe('NFT', function () {
   // auction formula => AUCTION_DROP_PER_STEP: (START_PRICE - END_PRICE)/ (1 day in seconds(86400)) * (AUCTION_DROP_INTERVAL in seconds)
   const auctionConfig = [
     {
-      START_PRICE: ethers.utils.parseEther('50'),
-      END_PRICE: ethers.utils.parseEther('5'),
-      AUCTION_DROP_INTERVAL: 600,
-      AUCTION_DROP_PER_STEP: ethers.utils.parseEther('0.3125'),
+      startPrice: ethers.utils.parseEther('50'),
+      endPrice: ethers.utils.parseEther('5'),
+      auctionDropPerStep: ethers.utils.parseEther('0.3125'),
     }, {
-      START_PRICE: ethers.utils.parseEther('5'),
-      END_PRICE: ethers.utils.parseEther('2'),
-      AUCTION_DROP_INTERVAL: 600,
-      AUCTION_DROP_PER_STEP: ethers.utils.parseEther('0.02083333'),
+      startPrice: ethers.utils.parseEther('5'),
+      endPrice: ethers.utils.parseEther('2'),
+      auctionDropPerStep: ethers.utils.parseEther('0.02083333'),
     }, {
-      START_PRICE: ethers.utils.parseEther('10'),
-      END_PRICE: ethers.utils.parseEther('1'),
-      AUCTION_DROP_INTERVAL: 600,
-      AUCTION_DROP_PER_STEP: ethers.utils.parseEther('0.0625'),
+      startPrice: ethers.utils.parseEther('10'),
+      endPrice: ethers.utils.parseEther('1'),
+      auctionDropPerStep: ethers.utils.parseEther('0.0625'),
     }];
 
   beforeEach(async () => {
@@ -55,80 +50,61 @@ describe('NFT', function () {
     whiteListVerifierAddress = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
     royaltyDistributorAddress = accounts[5].address;
     const Contract = await ethers.getContractFactory("NFT");
-    AuctionStartTime_ = (await ethers.provider.getBlock('latest')).timestamp;
     NFTContract = (await Contract.deploy(
-      maxSupply_,
       {
-        OWNER: ownerAddress,
-        PLATFORM: platformMultisigAddress,
-        DECENTRAL_TITAN: defiTitanAddress,
-        BUY_BACK_TREASURY_CONTRACT: buyBackTreasuryContractAddress,
-        WHITE_LIST_VERIFIER: whiteListVerifierAddress,
-        ROYALTY_DISTRIBUTOR_CONTRACT: royaltyDistributorAddress,
+        owner: ownerAddress,
+        platformMultisig: platformMultisigAddress,
+        decentralTitan: defiTitanAddress,
+        daoTreasuryContract: buyBackTreasuryContractAddress,
+        whiteListVerifier: whiteListVerifierAddress,
+        royaltyFeeReceiverContract: royaltyDistributorAddress,
 
       },
       godCID_,
       notRevealedArtCID_,
-      {
-        MINT_PRICE_IN_WEI: MintPriceInWei_,
-        MAX_MINT_PER_ADDRESS: MaxMintPerAddress_,
-        AUCTION_START_TIME: AuctionStartTime_,
-        AUCTION_DURATION: AuctionDuration_,
-        NUMBER_OF_TOKEN_FOR_AUCTION: NumberOFTokenForAuction_,
-        ROYALTY_FEE_PERCENT: RoyaltyFeePercent_,
-      },
       upgradeRequestFeeInWei_
     )) as NFT;
+    AuctionStartTime_ = (await ethers.provider.getBlock('latest')).timestamp;
 
-    await NFTContract.initializer(auctionConfig);
+    await NFTContract.initializer(auctionConfig, buyBackTreasuryContractAddress , royaltyDistributorAddress);
   });
 
   // TODO: check name and symbol
   describe('#constructor', () => {
     it('should have correct max supply', async () => {
       const maxSupply = await NFTContract.MAX_SUPPLY();
-      expect(maxSupply).to.equal(maxSupply_);
+      expect(maxSupply).to.equal(7777);
     });
 
     it('should have correct owner address', async () => {
       const OwnableOwner = await NFTContract.owner();
-      const AddressesOwner = (await NFTContract.ADDRESS()).OWNER
+      const AddressesOwner = (await NFTContract.addresses()).owner;
       expect(OwnableOwner).to.equal(ownerAddress);
       expect(AddressesOwner).to.equal(ownerAddress);
     });
 
     it('should have correct platform multisig address', async () => {
-      const platformMultisig = (await NFTContract.ADDRESS()).PLATFORM;
+      const platformMultisig = (await NFTContract.addresses()).platformMultisig;
       expect(platformMultisig).to.equal(platformMultisigAddress);
     });
 
     it('should have correct defi titan address', async () => {
-      const defiTitan = (await NFTContract.ADDRESS()).DECENTRAL_TITAN;
+      const defiTitan = (await NFTContract.addresses()).decentralTitan;
       expect(defiTitan).to.equal(defiTitanAddress);
     });
 
-    it('should have correct buy back treasury contract address', async () => {
-      const buyBackTreasuryContract = (await NFTContract.ADDRESS()).BUY_BACK_TREASURY_CONTRACT;
-      expect(buyBackTreasuryContract).to.equal(buyBackTreasuryContractAddress);
-    });
-
     it('should have correct white list verifier address', async () => {
-      const whiteListVerifier = (await NFTContract.ADDRESS()).WHITE_LIST_VERIFIER;
+      const whiteListVerifier = (await NFTContract.addresses()).whiteListVerifier;
       expect(whiteListVerifier).to.equal(whiteListVerifierAddress);
     });
 
-    it('should have correct royalty distributor address', async () => {
-      const royaltyDistributor = (await NFTContract.ADDRESS()).ROYALTY_DISTRIBUTOR_CONTRACT;
-      expect(royaltyDistributor).to.equal(royaltyDistributorAddress);
-    });
-
     it('should have correct god cid', async () => {
-      const godCID = (await NFTContract.IPFS()).GOD_CID;
+      const godCID = (await NFTContract.ipfs()).godCID;
       expect(godCID).to.equal(godCID_);
     });
 
     it('should have correct not revealed art cid', async () => {
-      const notRevealedArtCID = (await NFTContract.IPFS()).NOT_REVEALED_ART_CID;
+      const notRevealedArtCID = (await NFTContract.ipfs()).notRevealedArtCID;
       expect(notRevealedArtCID).to.equal(notRevealedArtCID_);
     });
   });
@@ -155,21 +131,21 @@ describe('NFT', function () {
 
     it('maxSupply should be equal to number of token in auction in this stage', async () => {
       const currentSupply = await NFTContract.totalSupply();
-      const numberOfTokenInAuction = (await NFTContract.MINTING_CONFIG()).NUMBER_OF_TOKEN_FOR_AUCTION;
+      const numberOfTokenInAuction = (await NFTContract.NUMBER_OF_TOKEN_FOR_AUCTION());
       expect(currentSupply).to.equal(numberOfTokenInAuction);
     });
 
     it('should set auction config correctly', async () => {
       for (let i = 0; i < NumberOFTokenForAuction_; i++) {
-        const auction = await NFTContract.AUCTIONS(i + 1);
-        expect(auction.START_PRICE).to.equal(auctionConfig[i].START_PRICE);
-        expect(auction.END_PRICE).to.equal(auctionConfig[i].END_PRICE);
-        expect(auction.START_TIME).to.equal(AuctionStartTime_ + i * AuctionDuration_);
-        expect(auction.EXPIRE_AT).to.equal(AuctionStartTime_ + (i + 1) * AuctionDuration_);
-        expect(auction.TOKEN_ID).to.equal(i);
-        expect(auction.IS_SOLD).to.equal(false);
-        expect(auction.AUCTION_DROP_INTERVAL).to.equal(auctionConfig[i].AUCTION_DROP_INTERVAL);
-        expect(auction.AUCTION_DROP_PER_STEP).to.equal(auctionConfig[i].AUCTION_DROP_PER_STEP);
+        const auction = await NFTContract.auctions(i + 1);
+        expect(auction.startPrice).to.equal(auctionConfig[i].startPrice);
+        expect(auction.endPrice).to.equal(auctionConfig[i].endPrice);
+        expect(auction.startAt).to.equal(AuctionStartTime_ + i * AuctionDuration_ );
+        expect(auction.expireAt).to.equal(AuctionStartTime_ + (i + 1) * AuctionDuration_);
+        expect(auction.tokenId).to.equal(i);
+        expect(auction.isSold).to.equal(false);
+        expect(await NFTContract.AUCTION_DROP_INTERVAL()).to.equal(600);
+        expect(auction.auctionDropPerStep).to.equal(auctionConfig[i].auctionDropPerStep);
       }
     });
 
@@ -200,7 +176,7 @@ describe('NFT', function () {
       const tokenId = 0;
       const day = tokenId + 1;
       const price = await NFTContract.getAuctionPrice(day);
-      expect(price).to.equal(auctionConfig[tokenId].START_PRICE);
+      expect(price).to.equal(auctionConfig[tokenId].startPrice);
       // expect(0.1).to.be.closeTo(0.2, 0.1, 'no why fail??');
 
       const time = 40 * 60; // 40 minutes
@@ -219,9 +195,9 @@ describe('NFT', function () {
       expect(blockNumAfter).to.be.equal(blockNumBefore + 1);
       expect(timestampAfter).to.be.closeTo(timestampBefore + time, 2);
 
-      const step = time / auctionConfig[tokenId].AUCTION_DROP_INTERVAL;
-      const calcPrice = auctionConfig[tokenId].START_PRICE.sub(
-        auctionConfig[tokenId].AUCTION_DROP_PER_STEP.mul(
+      const step = time /600;
+      const calcPrice = auctionConfig[tokenId].startPrice.sub(
+        auctionConfig[tokenId].auctionDropPerStep.mul(
           parseInt(step.toString())
         )
       );
@@ -376,7 +352,7 @@ describe('NFT', function () {
       await NFTContract.connect(accounts[0]).startWhiteListMinting();
       await NFTContract.connect(accounts[0]).startPublicMinting();
 
-      const publicMintState = (await NFTContract.STATE()).MINTING_IS_ACTIVE
+      const publicMintState = (await NFTContract.state()).mintingIsActive
       expect(publicMintState).to.equal(true);
 
       await expect(NFTContract.publicMint(4)).to.be.revertedWith('Receive To Max Mint Per Address');
@@ -391,13 +367,13 @@ describe('NFT', function () {
       const balance = await NFTContract.balanceOf(accounts[10].address);
       expect(balance).to.equal(3);
 
-      await expect(NFTContract.publicMint(270)).to.be.revertedWith('Receive To Max Supply');
+      await expect(NFTContract.publicMint(27000)).to.be.revertedWith('Receive To Max Supply');
 
       // token Uri checking
       const tokenURI = await NFTContract.tokenURI(1);
       expect(tokenURI).to.equal(godCID_.concat('/1'));
 
-      expect((await NFTContract.STATE()).ART_IS_REVEALED).to.equal(false);
+      expect((await NFTContract.state()).artIsRevealed).to.equal(false);
       const tokenURI2 = await NFTContract.tokenURI(5);
       expect(
         tokenURI2
@@ -413,7 +389,7 @@ describe('NFT', function () {
 
       await NFTContract.connect(accounts[0]).revealArt(afterRevealArtCID_);
 
-      expect((await NFTContract.STATE()).ART_IS_REVEALED).to.equal(true);
+      expect((await NFTContract.state()).artIsRevealed).to.equal(true);
 
       // test burn
 
@@ -476,7 +452,7 @@ describe('NFT', function () {
       });
 
       expect(
-        await NFTContract.UPGRADE_REQUEST_FEE_IS_PAID(7)
+        await NFTContract.upgradeRequestFeeIsPaid(7)
       ).to.be.equal(true);
 
       const upgradeCID = 'IPFS://QmTF2PivsUf3PQqrTAamNczxNXRR3Mj1jwJ41GaoNs3e89'
@@ -491,7 +467,7 @@ describe('NFT', function () {
       ).to.be.equal(upgradeCID);
 
       expect(
-        await NFTContract.UPGRADE_REQUEST_FEE_IS_PAID(7)
+        await NFTContract.upgradeRequestFeeIsPaid(7)
       ).to.be.equal(false);
 
     });

@@ -51,7 +51,7 @@ npx hardhat export-abi
 for showing test coverage
 
 ```
-npx hardhat export-abi
+npx hardhat coverage
 ```
 
 ---
@@ -144,4 +144,12 @@ Avoiding Naming Collisions: single_trailing_underscore_. This convention is sugg
     - events, 
     - modifiers, 
     - constructor and functions
+        - receive function (if exists)
+        - fallback function (if exists)
+        - external functions
+        - public functions
+        - internal functions
+        - private functions
+        - place the view and pure functions last in each function group
+
  ```
