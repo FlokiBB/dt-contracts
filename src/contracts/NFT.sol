@@ -69,16 +69,13 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
     }
     ContractIPFS public ipfs;
 
-
-    uint256 constant public MINT_PRICE_IN_WEI = 0.05 * 10**18;
-    uint16 constant public MAX_MINT_PER_ADDRESS = 3;
-    uint256 immutable public AUCTION_START_TIME ; // epoch time
-    uint8 constant public NUMBER_OF_TOKEN_FOR_AUCTION = 3;
-    uint256 constant public AUCTION_DURATION = 86400; // in seconds
-    uint8 constant public ROYALTY_FEE_PERCENT = 10;
-    uint256 constant public AUCTION_DROP_INTERVAL = 600; // in seconds
-
-    
+    uint256 public constant MINT_PRICE_IN_WEI = 0.05 * 10**18;
+    uint16 public constant MAX_MINT_PER_ADDRESS = 3;
+    uint256 public immutable AUCTION_START_TIME; // epoch time
+    uint8 public constant NUMBER_OF_TOKEN_FOR_AUCTION = 3;
+    uint256 public constant AUCTION_DURATION = 86400; // in seconds
+    uint8 public constant ROYALTY_FEE_PERCENT = 10;
+    uint256 public constant AUCTION_DROP_INTERVAL = 600; // in seconds
 
     struct RoyaltyInfo {
         address recipeint;
@@ -112,7 +109,6 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
     event UpgradeRequestPayment(uint16 tokenId, uint256 value);
     event TokenUpgraded(uint16 tokenId);
     event AuctionsInitialized(uint8 numberOfGods, uint256 startTimeStamp);
-
 
     // Enums
     enum WhiteListType {
@@ -158,8 +154,11 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
         string memory godCID_,
         string memory _notRevealedArtCID,
         uint256 _upgradeRequestFeeInWei
+    )
         // DTAuth(_addresses.owner, _addresses.platformMultisig, _addresses.decentralTitan)
-    ) DTERC721A('DemmortalTreasure', 'DT') DTAuth(_addresses.owner) {
+        DTERC721A('DemmortalTreasure', 'DT')
+        DTAuth(_addresses.owner)
+    {
         state = ContractState(false, false, false, false, false, false);
         addresses.decentralTitan = _addresses.decentralTitan;
         addresses.owner = _addresses.owner;
@@ -169,7 +168,7 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
         ipfs.notRevealedArtCID = _notRevealedArtCID;
         upgradeRequestFeeInWei = _upgradeRequestFeeInWei;
         //Todo remove it during final deploy and input it as constant variable
-        AUCTION_START_TIME= block.timestamp;
+        AUCTION_START_TIME = block.timestamp;
     }
 
     receive() external payable {
@@ -181,7 +180,11 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
     }
 
     // State Management related functions.
-    function initializer(AuctionConfig[] calldata configs, address daoTresury, address royaltyReceiverContract) external onlyOwner {
+    function initializer(
+        AuctionConfig[] calldata configs,
+        address daoTresury,
+        address royaltyReceiverContract
+    ) external onlyOwner {
         require(!state.initilized, 'Already Initialized');
         require(!state.finished, 'Already Finished');
         require(!state.auctionIsActive, 'Already Activated');
@@ -321,10 +324,7 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
 
     function publicMint(uint256 quantity) external payable whileMintingIsActive {
         require(_totalMinted() + quantity <= MAX_SUPPLY, 'Receive To Max Supply');
-        require(
-            _numberMinted(msg.sender) + quantity <= MAX_MINT_PER_ADDRESS,
-            'Receive To Max Mint Per Address'
-        );
+        require(_numberMinted(msg.sender) + quantity <= MAX_MINT_PER_ADDRESS, 'Receive To Max Mint Per Address');
         require(quantity * MINT_PRICE_IN_WEI <= msg.value, 'Not Enoughs Ether');
         _safeMint(msg.sender, quantity);
         _transferEth(addresses.daoTreasuryContract, msg.value);
@@ -396,7 +396,6 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
             return string(abi.encodePacked(ipfs.notRevealedArtCID));
         }
     }
-
 
     function isWhitelisted(
         address account_,
