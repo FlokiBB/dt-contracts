@@ -38,11 +38,9 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     // /______/______/______/______/______/______/______/______/______/______/____/___
     // *******************************************************************************
 
-
     // State variables
     uint16 public immutable MAX_SUPPLY;
     uint256 public UPGRADE_REQUEST_FEE_IN_WEI;
-
 
     struct ContractState {
         bool INITIALIZED;
@@ -64,14 +62,12 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     }
     ContractAddresses public ADDRESS;
 
-
     struct ContractIPFS {
         string GOD_CID;
         string NOT_REVEALED_ART_CID;
         string ART_CID;
     }
     ContractIPFS public IPFS;
-
 
     struct ContactMintConfig {
         uint256 MINT_PRICE_IN_WEI;
@@ -82,7 +78,6 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         uint8 ROYALTY_FEE_PERCENT;
     }
     ContactMintConfig public MINTING_CONFIG;
-    
 
     struct RoyaltyInfo {
         address RECIPIENT;
@@ -293,7 +288,6 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         return _getAuctionPrice(auction);
     }
 
-
     function whitelistMinting(
         uint8 maxQuantity_,
         uint8 quantity_,
@@ -411,7 +405,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         bytes32 msgHash = prefixed(keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)));
         return ECDSA.recover(msgHash, sig_) == ADDRESS.WHITE_LIST_VERIFIER;
     }
-    
+
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
         if (block.timestamp < auction_.START_TIME) {
             return auction_.START_PRICE;
@@ -427,7 +421,6 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     function prefixed(bytes32 hash) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', hash));
     }
-
 
     function _setupGodAuction(AuctionConfig[] memory configs) private {
         require(_totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Receive To Max Supply');
