@@ -10,6 +10,7 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
+// add test for setOwnersExplicit
 // add test for transferfrom and approve
 // TODO: msg.sender or _msgSender()
 // TODO: @audit diffrent compiler version issue between library and main contract
@@ -37,7 +38,12 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
     // /______/______/______/______/______/______/______/______/______/______/____/___
     // *******************************************************************************
 
-    // Structs
+
+    // State variables
+    uint16 public immutable MAX_SUPPLY;
+    uint256 public UPGRADE_REQUEST_FEE_IN_WEI;
+
+
     struct ContractState {
         bool INITIALIZED;
         bool AUCTION_IS_ACTIVE;
@@ -46,6 +52,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         bool ART_IS_REVEALED;
         bool FINISHED;
     }
+    ContractState public STATE;
 
     struct ContractAddresses {
         address OWNER;
@@ -55,12 +62,16 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         address WHITE_LIST_VERIFIER;
         address ROYALTY_DISTRIBUTOR_CONTRACT;
     }
+    ContractAddresses public ADDRESS;
+
 
     struct ContractIPFS {
         string GOD_CID;
         string NOT_REVEALED_ART_CID;
         string ART_CID;
     }
+    ContractIPFS public IPFS;
+
 
     struct ContactMintConfig {
         uint256 MINT_PRICE_IN_WEI;
@@ -70,6 +81,18 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         uint8 NUMBER_OF_TOKEN_FOR_AUCTION;
         uint8 ROYALTY_FEE_PERCENT;
     }
+    ContactMintConfig public MINTING_CONFIG;
+    
+
+    struct RoyaltyInfo {
+        address RECIPIENT;
+        uint8 PERCENT;
+    }
+    RoyaltyInfo private _ROYALTIES;
+
+    mapping(uint16 => bool) public TOKEN_IS_UPGRADED;
+    mapping(uint16 => string) private _UPGRADED_TOKEN_CID;
+    mapping(uint16 => bool) public TOKEN_IS_GOD;
 
     struct AuctionConfig {
         uint256 START_PRICE; // in wei
@@ -87,37 +110,19 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         uint256 AUCTION_DROP_PER_STEP; // in wei
         bool IS_SOLD;
     }
+    mapping(uint8 => Auction) public AUCTIONS;
 
-    struct RoyaltyInfo {
-        address RECIPIENT;
-        uint8 PERCENT;
-    }
+    mapping(uint256 => bool) public UPGRADE_REQUEST_FEE_IS_PAID;
+
+    // Events
+    event UpgradeRequestPayment(uint16 _token, uint256 _value);
+    event TokenUpgraded(uint16 _token);
 
     // Enums
     enum WhiteListType {
         NORMAL,
         ROYAL
     }
-
-    // Events
-    event UpgradeRequestPayment(uint16 _token, uint256 _value);
-    event TokenUpgraded(uint16 _token);
-
-    // State variables
-    uint16 public immutable MAX_SUPPLY;
-    uint256 public UPGRADE_REQUEST_FEE_IN_WEI;
-    ContractState public STATE;
-    ContractAddresses public ADDRESS;
-    ContractIPFS public IPFS;
-    ContactMintConfig public MINTING_CONFIG;
-    RoyaltyInfo private _ROYALTIES;
-
-    // Mappings
-    mapping(uint16 => bool) public TOKEN_IS_UPGRADED;
-    mapping(uint16 => string) private _UPGRADED_TOKEN_CID;
-    mapping(uint16 => bool) public TOKEN_IS_GOD;
-    mapping(uint8 => Auction) public AUCTIONS;
-    mapping(uint256 => bool) public UPGRADE_REQUEST_FEE_IS_PAID;
 
     // Modifires
     modifier whileAuctionIsActive() {
@@ -167,6 +172,14 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         IPFS.NOT_REVEALED_ART_CID = notRevealedArtCID_;
         MINTING_CONFIG = mintConfig_;
         UPGRADE_REQUEST_FEE_IN_WEI = upgradeRequestFeeInWei_;
+    }
+
+    receive() external payable {
+        revert('Not Allowed');
+    }
+
+    fallback() external payable {
+        revert('Call Valid Function');
     }
 
     // State Management related functions.
@@ -273,18 +286,6 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         AUCTIONS[day].IS_SOLD = true;
     }
 
-    function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
-        if (block.timestamp < auction_.START_TIME) {
-            return auction_.START_PRICE;
-        }
-        if (block.timestamp > auction_.EXPIRE_AT) {
-            return auction_.END_PRICE;
-        }
-        uint256 elapsedTime = block.timestamp - auction_.START_TIME;
-        uint256 steps = elapsedTime / auction_.AUCTION_DROP_INTERVAL;
-        return auction_.START_PRICE - (steps * auction_.AUCTION_DROP_PER_STEP);
-    }
-
     function getAuctionPrice(uint8 day) external view whileAuctionIsActive returns (uint256) {
         require(1 <= day && day <= MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'day is out of range');
 
@@ -292,32 +293,7 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         return _getAuctionPrice(auction);
     }
 
-    function _setupGodAuction(AuctionConfig[] memory configs) private {
-        require(_totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Receive To Max Supply');
-        require(configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Configs Length');
 
-        _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
-
-        // we need set first token id to the token sell in auction for CID availability.
-        require(_totalMinted() == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Initialization');
-
-        for (uint8 i = 0; i < MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION; i++) {
-            Auction memory _auction = Auction(
-                i,
-                MINTING_CONFIG.AUCTION_START_TIME + MINTING_CONFIG.AUCTION_DURATION * i,
-                MINTING_CONFIG.AUCTION_START_TIME + MINTING_CONFIG.AUCTION_DURATION * (i + 1),
-                configs[i].START_PRICE,
-                configs[i].END_PRICE,
-                configs[i].AUCTION_DROP_INTERVAL,
-                configs[i].AUCTION_DROP_PER_STEP,
-                false
-            );
-            AUCTIONS[i + 1] = _auction;
-            TOKEN_IS_GOD[i] = true;
-        }
-    }
-
-    // WhiteListMinting related functions.
     function whitelistMinting(
         uint8 maxQuantity_,
         uint8 quantity_,
@@ -343,22 +319,6 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
             _transferEth(ADDRESS.BUY_BACK_TREASURY_CONTRACT, msg.value);
         }
     }
-
-    function isWhitelisted(
-        address account_,
-        uint8 maxQuantity_,
-        WhiteListType whiteListType_,
-        bytes calldata sig_
-    ) public view returns (bool) {
-        bytes32 msgHash = prefixed(keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)));
-        return ECDSA.recover(msgHash, sig_) == ADDRESS.WHITE_LIST_VERIFIER;
-    }
-
-    function prefixed(bytes32 hash) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', hash));
-    }
-
-    // Minting related functions.
 
     function publicMint(uint256 quantity) external payable whileMintingIsActive {
         require(_totalMinted() + quantity <= MAX_SUPPLY, 'Receive To Max Supply');
@@ -399,7 +359,29 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         emit TokenUpgraded(tokenId);
     }
 
-    // customize Token URI
+    function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
+        require(_exists(tokenId), 'Token Not Exists');
+        TokenOwnership memory ownership = ownershipOf(tokenId);
+        require(msg.sender == ownership.addr, 'Is Not Owner');
+        _burn(tokenId);
+        // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender as a parameter
+    }
+
+    function royaltyInfo(uint256, uint256 value)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver = _ROYALTIES.RECIPIENT;
+        royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
+    }
+
+    // @audit i think we dont need accsess modifire like onlyOwner for this function. double check it.
+    function setOwnersExplicit(uint256 quantity) external nonReentrant {
+        _setOwnersExplicit(quantity);
+    }
+
     function tokenURI(uint256 tokenId_) public view override returns (string memory) {
         require(_exists(tokenId_), 'Token Not Exists');
 
@@ -416,49 +398,66 @@ contract NFT is DTERC721A, DTOwnable, ReentrancyGuard, IERC2981Royalties {
         }
     }
 
-    // Token BuyBack related functions.
-    function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
-        require(_exists(tokenId), 'Token Not Exists');
-        TokenOwnership memory ownership = ownershipOf(tokenId);
-        require(msg.sender == ownership.addr, 'Is Not Owner');
-        _burn(tokenId);
-        // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender as a parameter
-    }
-
-    // EIP-2981 related functions.
     function _setRoyalties(address recipient, uint8 value) internal {
         _ROYALTIES = RoyaltyInfo(recipient, uint8(value));
     }
 
-    function royaltyInfo(uint256, uint256 value)
-        external
-        view
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        receiver = _ROYALTIES.RECIPIENT;
-        royaltyAmount = (value * _ROYALTIES.PERCENT) / 100;
+    function isWhitelisted(
+        address account_,
+        uint8 maxQuantity_,
+        WhiteListType whiteListType_,
+        bytes calldata sig_
+    ) public view returns (bool) {
+        bytes32 msgHash = prefixed(keccak256(abi.encodePacked(account_, maxQuantity_, whiteListType_)));
+        return ECDSA.recover(msgHash, sig_) == ADDRESS.WHITE_LIST_VERIFIER;
+    }
+    
+    function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
+        if (block.timestamp < auction_.START_TIME) {
+            return auction_.START_PRICE;
+        }
+        if (block.timestamp > auction_.EXPIRE_AT) {
+            return auction_.END_PRICE;
+        }
+        uint256 elapsedTime = block.timestamp - auction_.START_TIME;
+        uint256 steps = elapsedTime / auction_.AUCTION_DROP_INTERVAL;
+        return auction_.START_PRICE - (steps * auction_.AUCTION_DROP_PER_STEP);
     }
 
-    // utility functions
+    function prefixed(bytes32 hash) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', hash));
+    }
+
+
+    function _setupGodAuction(AuctionConfig[] memory configs) private {
+        require(_totalMinted() + MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Receive To Max Supply');
+        require(configs.length == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Configs Length');
+
+        _safeMint(ADDRESS.DECENTRAL_TITAN, MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION);
+
+        // we need set first token id to the token sell in auction for CID availability.
+        require(_totalMinted() == MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Initialization');
+
+        for (uint8 i = 0; i < MINTING_CONFIG.NUMBER_OF_TOKEN_FOR_AUCTION; i++) {
+            Auction memory _auction = Auction(
+                i,
+                MINTING_CONFIG.AUCTION_START_TIME + MINTING_CONFIG.AUCTION_DURATION * i,
+                MINTING_CONFIG.AUCTION_START_TIME + MINTING_CONFIG.AUCTION_DURATION * (i + 1),
+                configs[i].START_PRICE,
+                configs[i].END_PRICE,
+                configs[i].AUCTION_DROP_INTERVAL,
+                configs[i].AUCTION_DROP_PER_STEP,
+                false
+            );
+            AUCTIONS[i + 1] = _auction;
+            TOKEN_IS_GOD[i] = true;
+        }
+    }
 
     function _transferEth(address to_, uint256 amount) private {
         address payable to = payable(to_);
         (bool sent, ) = to.call{value: amount}('');
         require(sent, 'Transfer Failed');
-    }
-
-    // @audit i think we dont need accsess modifire like onlyOwner for this function. double check it.
-    function setOwnersExplicit(uint256 quantity) external nonReentrant {
-        _setOwnersExplicit(quantity);
-    }
-
-    receive() external payable {
-        revert('Not Allowed');
-    }
-
-    fallback() external payable {
-        revert('Call Valid Function');
     }
 
     // @audit are we need a withdraw function due we don't keep any fund in the contract?
