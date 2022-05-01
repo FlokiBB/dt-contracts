@@ -79,6 +79,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth,ReentrancyGuard, IERC2981Royalties 
     uint256 constant public AUCTION_DURATION = 86400; // in seconds
     uint8 constant public ROYALTY_FEE_PERCENT = 10;
     uint256 constant public AUCTION_DROP_INTERVAL = 600; // in seconds
+    uint8 constant private NUMBER_OF_ACTOR = 2;
 
     
 
@@ -123,9 +124,8 @@ contract NFT is DTERC721A, DTOwnable, DTAuth,ReentrancyGuard, IERC2981Royalties 
     }
 
     enum Actors {
-        platformMultisig,
-        decentralTitan,
-
+        PLATFORM_MULTISIG,
+        DECENTRAL_TITAN
     }
 
     // Modifiers
@@ -167,10 +167,11 @@ contract NFT is DTERC721A, DTOwnable, DTAuth,ReentrancyGuard, IERC2981Royalties 
         string memory _notRevealedArtCID,
         uint256 _upgradeRequestFeeInWei
         // DTAuth(_addresses.owner, _addresses.platformMultisig, _addresses.decentralTitan)
-    ) DTERC721A('DemmortalTreasure', 'DT') DTOwnable(_addresses.owner) DTAuth(3) {
+    ) DTERC721A('DemmortalTreasure', 'DT') DTOwnable(_addresses.owner) DTAuth(NUMBER_OF_ACTOR) {
         state = ContractState(false, false, false, false, false, false);
         addresses.decentralTitan = _addresses.decentralTitan;
         addresses.owner = _addresses.owner;
+        //TODO: use DTAuth in this contract
         addresses.platformMultisig = _addresses.platformMultisig;
         addresses.whiteListVerifier = _addresses.whiteListVerifier;
         ipfs.godCID = godCID_;
