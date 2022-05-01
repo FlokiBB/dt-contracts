@@ -16,7 +16,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // add test for transferfrom and approve
 // TODO: msg.sender or _msgSender()
 // TODO: @audit different compiler version issue between library and main contract
-contract NFT is DTERC721A, DTOwnable, DTAuth,ReentrancyGuard, IERC2981Royalties {
+contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
     // *******************************************************************************
@@ -71,16 +71,14 @@ contract NFT is DTERC721A, DTOwnable, DTAuth,ReentrancyGuard, IERC2981Royalties 
     }
     ContractIPFS public ipfs;
 
-    uint256 constant public MINT_PRICE_IN_WEI = 0.05 * 10**18;
-    uint16 constant public MAX_MINT_PER_ADDRESS = 3;
-    uint256 immutable public AUCTION_START_TIME ; // epoch time
-    uint8 constant public NUMBER_OF_TOKEN_FOR_AUCTION = 3;
-    uint256 constant public AUCTION_DURATION = 86400; // in seconds
-    uint8 constant public ROYALTY_FEE_PERCENT = 10;
-    uint256 constant public AUCTION_DROP_INTERVAL = 600; // in seconds
-    uint8 constant private NUMBER_OF_ACTOR = 2;
-
-   
+    uint256 public constant MINT_PRICE_IN_WEI = 0.05 * 10**18;
+    uint16 public constant MAX_MINT_PER_ADDRESS = 3;
+    uint256 public immutable AUCTION_START_TIME; // epoch time
+    uint8 public constant NUMBER_OF_TOKEN_FOR_AUCTION = 3;
+    uint256 public constant AUCTION_DURATION = 86400; // in seconds
+    uint8 public constant ROYALTY_FEE_PERCENT = 10;
+    uint256 public constant AUCTION_DROP_INTERVAL = 600; // in seconds
+    uint8 private constant NUMBER_OF_ACTOR = 2;
 
     struct RoyaltyInfo {
         address recipeint;

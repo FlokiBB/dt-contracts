@@ -16,7 +16,6 @@ import '@openzeppelin/contracts/utils/Context.sol';
 abstract contract DTOwnable is Context {
     address private _owner;
 
-
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**

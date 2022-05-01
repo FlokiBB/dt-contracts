@@ -24,33 +24,32 @@ abstract contract DTAuth {
     }
 
     /**
-    * @dev Can be used to returns the information about the roles.
-    */
-    mapping (uint8 => Role) public roles;
+     * @dev Can be used to returns the information about the roles.
+     */
+    mapping(uint8 => Role) public roles;
 
     event RoleProposed(uint8 indexed roleId, address indexed currentAddr, address indexed proposedAddr);
     event RoleAccepted(uint8 indexed roleId, address indexed oldAddr, address indexed newAddr);
 
-
     /**
-    * @dev Initializes the number of roles.
-    */
+     * @dev Initializes the number of roles.
+     */
     constructor(uint8 _numberOfRoles) {
         numberOfRoles = _numberOfRoles;
     }
 
     /**
-    * @dev Initializes the roles.
-    * @param addresses - the addresses of the roles.
-    * @param roleIds - the ids of the roles.
-    */
+     * @dev Initializes the roles.
+     * @param addresses - the addresses of the roles.
+     * @param roleIds - the ids of the roles.
+     */
     function init(address[] memory addresses, uint8[] memory roleIds) internal {
         require(addresses.length == roleIds.length, 'the number of addresses and the role ids must be equal');
-        require(addresses.length == numberOfRoles, "reach to max number of authorities");
+        require(addresses.length == numberOfRoles, 'reach to max number of authorities');
 
         for (uint8 i = 0; i < addresses.length; i++) {
-            require(roles[roleIds[i]].addr == address(0), "role already exists");
-            require(roles[roleIds[i]].isRenounced == false, "role already used and revoked");
+            require(roles[roleIds[i]].addr == address(0), 'role already exists');
+            require(roles[roleIds[i]].isRenounced == false, 'role already used and revoked');
             roles[roleIds[i]] = Role(addresses[i], address(0), false);
         }
     }
@@ -77,9 +76,8 @@ abstract contract DTAuth {
         roles[roleId].isRenounced = true;
     }
 
-
     /**
-     * @dev for changing the role actor address first the current actor should proposed the new address and 
+     * @dev for changing the role actor address first the current actor should proposed the new address and
      * then the new address should be accepted with using {acceptAuthority} function.
      * zero address and the current address are not allowed.
      * @param roleId - the role id
@@ -97,7 +95,7 @@ abstract contract DTAuth {
      * @param roleId - the role id
      */
 
-    function acceptAuthority(uint8 roleId) public virtual{
+    function acceptAuthority(uint8 roleId) public virtual {
         require(roles[roleId].proposedAddr == msg.sender, 'caller is not proposed');
         address currentAddr = roles[roleId].addr;
         _transferAuthority(roleId);
