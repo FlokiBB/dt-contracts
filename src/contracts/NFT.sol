@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Creator: DDD(DeDogma DAO)
 
-pragma solidity ^0.8.4;
+pragma solidity 0.8.4;
 
 import './library/DTERC721A.sol';
+import './library/DTOwnable.sol';
 import './library/DTAuth.sol';
+
 import './interfaces/IERC2981Royalties.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
@@ -13,8 +15,8 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 // add test for setOwnersExplicit
 // add test for transferfrom and approve
 // TODO: msg.sender or _msgSender()
-// TODO: @audit diffrent compiler version issue between library and main contract
-contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
+// TODO: @audit different compiler version issue between library and main contract
+contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
     // *******************************************************************************
@@ -76,6 +78,7 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
     uint256 public constant AUCTION_DURATION = 86400; // in seconds
     uint8 public constant ROYALTY_FEE_PERCENT = 10;
     uint256 public constant AUCTION_DROP_INTERVAL = 600; // in seconds
+    uint8 private constant NUMBER_OF_ACTOR = 2;
 
     struct RoyaltyInfo {
         address recipeint;
@@ -116,7 +119,12 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
         ROYAL
     }
 
-    // Modifires
+    enum Actors {
+        PLATFORM_MULTISIG,
+        DECENTRAL_TITAN
+    }
+
+    // Modifiers
     modifier whileAuctionIsActive() {
         require(state.auctionIsActive, 'Not Activated');
         _;
@@ -154,14 +162,11 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
         string memory godCID_,
         string memory _notRevealedArtCID,
         uint256 _upgradeRequestFeeInWei
-    )
-        // DTAuth(_addresses.owner, _addresses.platformMultisig, _addresses.decentralTitan)
-        DTERC721A('DemmortalTreasure', 'DT')
-        DTAuth(_addresses.owner)
-    {
+    ) DTERC721A('DemmortalTreasure', 'DT') DTOwnable(_addresses.owner) DTAuth(NUMBER_OF_ACTOR) {
         state = ContractState(false, false, false, false, false, false);
         addresses.decentralTitan = _addresses.decentralTitan;
         addresses.owner = _addresses.owner;
+        //TODO: use DTAuth in this contract
         addresses.platformMultisig = _addresses.platformMultisig;
         addresses.whiteListVerifier = _addresses.whiteListVerifier;
         ipfs.godCID = godCID_;
@@ -376,8 +381,8 @@ contract NFT is DTERC721A, DTAuth, ReentrancyGuard, IERC2981Royalties {
         royaltyAmount = (value * _royaltyes.percent) / 100;
     }
 
-    // @audit i think we dont need accsess modifire like onlyOwner for this function. double check it.
-    function setOwnersExplicit(uint256 quantity) external nonReentrant {
+    // @audit-ok i think we dont need accsess modifire like onlyOwner for this function. double check it.
+    function setOwnersExplicit(uint256 quantity) external {
         _setOwnersExplicit(quantity);
     }
 
