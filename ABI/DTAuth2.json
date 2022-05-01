@@ -1,0 +1,3 @@
+[
+  "function roles(uint8) view returns (uint8, address, address)"
+]

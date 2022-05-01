@@ -1,75 +1,111 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+// Creator: DDD(DeDogma DAO)
 
-import '@openzeppelin/contracts/utils/Context.sol';
+pragma solidity 0.8.4;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
  * there is an account (an owner) that can be granted exclusive access to
  * specific functions.
  *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
+ * the roles can be changed with using {proposeAuthority} and {acceptAuthority}.
  *
  * This module is used through inheritance. It will make available the modifier
- * `onlyOwner`, which can be applied to your functions to restrict their use to
- * the owner.
+ * `hasAuthorized(uint8 roleId)`, which can be applied to your functions to restrict their use to
+ * the non authorized entities.
  */
-abstract contract DTAuth is Context {
-    address private _owner;
+abstract contract DTAuth {
+    uint8 public immutable numberOfRoles;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     * FlokiBB: i change this to get the owner from the constructor
-     */
-    constructor(address owner_) {
-        _transferOwnership(owner_);
+    struct Role {
+        address addr;
+        address proposedAddr;
+        bool isRenounced;
     }
 
     /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view virtual returns (address) {
-        return _owner;
+    * @dev Can be used to returns the information about the roles.
+    */
+    mapping (uint8 => Role) public roles;
+
+    event RoleProposed(uint8 indexed roleId, address indexed currentAddr, address indexed proposedAddr);
+    event RoleAccepted(uint8 indexed roleId, address indexed oldAddr, address indexed newAddr);
+
+
+    /**
+    * @dev Initializes the number of roles.
+    */
+    constructor(uint8 _numberOfRoles) {
+        numberOfRoles = _numberOfRoles;
     }
 
     /**
-     * @dev Throws if called by any account other than the owner.
+    * @dev Initializes the roles.
+    * @param addresses - the addresses of the roles.
+    * @param roleIds - the ids of the roles.
+    */
+    function init(address[] memory addresses, uint8[] memory roleIds) internal {
+        require(addresses.length == roleIds.length, 'the number of addresses and the role ids must be equal');
+        require(addresses.length == numberOfRoles, "reach to max number of authorities");
+
+        for (uint8 i = 0; i < addresses.length; i++) {
+            require(roles[roleIds[i]].addr == address(0), "role already exists");
+            require(roles[roleIds[i]].isRenounced == false, "role already used and revoked");
+            roles[roleIds[i]] = Role(addresses[i], address(0), false);
+        }
+    }
+
+    /**
+     * @dev Throws if called by any account other than the authorized roleId address.
+     * @param roleId - the roleId of the role to check
      */
-    modifier onlyOwner() {
-        require(owner() == _msgSender(), 'Ownable: caller is not the owner');
+    modifier hasAuthorized(uint8 roleId) {
+        require(roles[roleId].addr == msg.sender, 'caller is not authorized');
         _;
     }
 
     /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     * @dev Leaves the role without owner. It will not be possible to call
+     * `hasAuthorized` functions anymore with the related roleId. Can only be called by the current role actor(address).
      *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
+     * NOTE: Renouncing Authority will leave the contract without an role owner,
+     * thereby removing any functionality that is only available to the hasAuthorized with that roleId.
+     * @param roleId - the roleId of the role to be revoked
      */
-    function renounceOwnership() public virtual onlyOwner {
-        _transferOwnership(address(0));
+    function renounceAuthority(uint8 roleId) public virtual hasAuthorized(roleId) {
+        roles[roleId].addr = address(0);
+        roles[roleId].isRenounced = true;
+    }
+
+
+    /**
+     * @dev for changing the role actor address first the current actor should proposed the new address and 
+     * then the new address should be accepted with using {acceptAuthority} function.
+     * zero address and the current address are not allowed.
+     * @param roleId - the role id
+     * @param proposedAddr - the proposed address
+     */
+    function proposeAuthority(uint8 roleId, address proposedAddr) public virtual hasAuthorized(roleId) {
+        require(proposedAddr != address(0), 'proposed address is not set');
+        require(proposedAddr != roles[roleId].addr, 'proposed address is not different from current address');
+        roles[roleId].proposedAddr = proposedAddr;
+        emit RoleProposed(roleId, roles[roleId].addr, roles[roleId].proposedAddr);
     }
 
     /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
+     * @dev Accepts the proposed address of the role.
+     * @param roleId - the role id
      */
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), 'Ownable: new owner is the zero address');
-        _transferOwnership(newOwner);
+
+    function acceptAuthority(uint8 roleId) public virtual{
+        require(roles[roleId].proposedAddr == msg.sender, 'caller is not proposed');
+        address currentAddr = roles[roleId].addr;
+        _transferAuthority(roleId);
+        emit RoleAccepted(roleId, currentAddr, roles[roleId].addr);
     }
 
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Internal function without access restriction.
-     */
-    function _transferOwnership(address newOwner) internal virtual {
-        address oldOwner = _owner;
-        _owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
+    function _transferAuthority(uint8 roleId) internal virtual {
+        roles[roleId].addr = roles[roleId].proposedAddr;
+        roles[roleId].proposedAddr = address(0);
     }
 }

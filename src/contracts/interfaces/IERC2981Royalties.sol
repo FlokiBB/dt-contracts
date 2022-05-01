@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity 0.8.4;
 
 /// @title IERC2981Royalties
 /// @dev Interface for the ERC2981 - Token Royalty standard
