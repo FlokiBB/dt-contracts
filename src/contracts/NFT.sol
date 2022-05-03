@@ -13,7 +13,7 @@ import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // add test for setOwnersExplicit
-// add test for transferfrom and approve
+// add test for transferFrom and approve
 // TODO: msg.sender or _msgSender()
 // TODO: @audit different compiler version issue between library and main contract
 contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
@@ -45,7 +45,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     uint256 public upgradeRequestFeeInWei;
 
     struct ContractState {
-        bool initilized;
+        bool initialized;
         bool auctionIsActive;
         bool whitelistMintingIsActive;
         bool mintingIsActive;
@@ -81,10 +81,10 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     uint8 private constant NUMBER_OF_ACTOR = 2;
 
     struct RoyaltyInfo {
-        address recipeint;
+        address recipient;
         uint8 percent;
     }
-    RoyaltyInfo private _royaltyes;
+    RoyaltyInfo private _royalties;
 
     mapping(uint16 => bool) public tokenIsUpgraded;
     mapping(uint16 => string) private _upgradedTokenCIDs;
@@ -139,7 +139,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
     modifier whileMintingDone() {
         require(state.finished, 'Not Finished');
-        require(state.initilized, 'Not Initialized');
+        require(state.initialized, 'Not Initialized');
         _;
     }
 
@@ -190,10 +190,10 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         address daoTresury,
         address royaltyReceiverContract
     ) external onlyOwner {
-        require(!state.initilized, 'Already Initialized');
+        require(!state.initialized, 'Already Initialized');
         require(!state.finished, 'Already Finished');
         require(!state.auctionIsActive, 'Already Activated');
-        state.initilized = true;
+        state.initialized = true;
         _setupGodAuction(configs);
         state.auctionIsActive = true;
         addresses.daoTreasuryContract = daoTresury;
@@ -228,7 +228,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
 
     function startWhiteListMinting() external onlyOwner {
-        require(state.initilized, 'Not Initialized');
+        require(state.initialized, 'Not Initialized');
         require(!state.finished, 'Already Finished');
         require(!state.whitelistMintingIsActive, 'Already Activated');
         state.whitelistMintingIsActive = true;
@@ -243,7 +243,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
 
     function finishAuction() external onlyDecentralTitan {
         require(!state.finished, 'Already Finished');
-        require(state.initilized, 'Not Initialized');
+        require(state.initialized, 'Not Initialized');
         require(state.auctionIsActive, 'Not Activated');
         state.auctionIsActive = false;
     }
@@ -377,11 +377,11 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        receiver = _royaltyes.recipeint;
-        royaltyAmount = (value * _royaltyes.percent) / 100;
+        receiver = _royalties.recipient;
+        royaltyAmount = (value * _royalties.percent) / 100;
     }
 
-    // @audit-ok i think we dont need accsess modifire like onlyOwner for this function. double check it.
+    // @audit-ok i think we don't need access modifier like onlyOwner for this function. double check it.
     function setOwnersExplicit(uint256 quantity) external {
         _setOwnersExplicit(quantity);
     }
@@ -413,7 +413,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
 
     function _setRoyalties(address recipient, uint8 value) internal {
-        _royaltyes = RoyaltyInfo(recipient, uint8(value));
+        _royalties = RoyaltyInfo(recipient, uint8(value));
     }
 
     function _getAuctionPrice(Auction memory auction_) internal view returns (uint256) {
