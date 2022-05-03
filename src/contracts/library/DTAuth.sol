@@ -15,7 +15,7 @@ pragma solidity 0.8.4;
  * the non authorized entities.
  */
 abstract contract DTAuth {
-    uint8 public immutable numberOfRoles;
+    uint8 public numberOfRoles;
 
     struct Role {
         address addr;

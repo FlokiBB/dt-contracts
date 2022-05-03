@@ -276,9 +276,9 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         Auction memory auction = auctions[day];
         TokenOwnership memory ownership = ownershipOf(auction.tokenId);
         address decentralTitan = roles[uint8(Actors.DECENTRAL_TITAN)].addr;
-        require(ownership.addr == decentralTitan, 'Bad Initialization');
 
         uint256 currentPrice = _getAuctionPrice(auction);
+        require(ownership.addr == decentralTitan, 'Bad Initialization');
 
         require(auction.endPrice <= currentPrice, 'Receive To Base Price');
         require(currentPrice <= msg.value, 'Not Enough Ether');
@@ -411,7 +411,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
 
     function _getAuctionPrice(Auction memory auction) private view returns (uint256) {
-        require(!auction.isSold, 'is Sold');
+        require(!auction.isSold, 'Already Sold');
         if (block.timestamp < auction.startAt) {
             return auction.startPrice;
         }

@@ -17,10 +17,8 @@ describe('NFT', function () {
   const afterRevealArtCID_ = 'ipfs://QmNMgz4h3NHWdy5fFGCZRgxEJzxMVKWRp3ykSsbhDRK5RE';
 
   const MintPriceInWei_ = ethers.utils.parseEther('0.05');
-  const MaxMintPerAddress_ = 3;
   const AuctionDuration_ = 86400 // 1 day
   const NumberOFTokenForAuction_ = 3;
-  const RoyaltyFeePercent_ = 10;
   let AuctionStartTime_: number;
 
   const upgradeRequestFeeInWei_ = ethers.utils.parseEther('0.01');
@@ -51,22 +49,16 @@ describe('NFT', function () {
     royaltyDistributorAddress = accounts[5].address;
     const Contract = await ethers.getContractFactory("NFT");
     NFTContract = (await Contract.deploy(
-      {
-        owner: ownerAddress,
-        platformMultisig: platformMultisigAddress,
-        decentralTitan: defiTitanAddress,
-        daoTreasuryContract: buyBackTreasuryContractAddress,
-        whiteListVerifier: whiteListVerifierAddress,
-        royaltyFeeReceiverContract: royaltyDistributorAddress,
-
-      },
       godCID_,
       notRevealedArtCID_,
-      upgradeRequestFeeInWei_
+      upgradeRequestFeeInWei_,
+      ownerAddress,
+      platformMultisigAddress,
+      defiTitanAddress,
     )) as NFT;
     AuctionStartTime_ = (await ethers.provider.getBlock('latest')).timestamp;
 
-    await NFTContract.initializer(auctionConfig, buyBackTreasuryContractAddress , royaltyDistributorAddress);
+    await NFTContract.connect(accounts[1]).initializer(auctionConfig, buyBackTreasuryContractAddress ,royaltyDistributorAddress, whiteListVerifierAddress);
   });
 
   // TODO: check name and symbol
@@ -78,18 +70,16 @@ describe('NFT', function () {
 
     it('should have correct owner address', async () => {
       const OwnableOwner = await NFTContract.owner();
-      const AddressesOwner = (await NFTContract.addresses()).owner;
       expect(OwnableOwner).to.equal(ownerAddress);
-      expect(AddressesOwner).to.equal(ownerAddress);
     });
 
     it('should have correct platform multisig address', async () => {
-      const platformMultisig = (await NFTContract.addresses()).platformMultisig;
+      const platformMultisig = (await NFTContract.roles(0)).addr;
       expect(platformMultisig).to.equal(platformMultisigAddress);
     });
 
     it('should have correct defi titan address', async () => {
-      const defiTitan = (await NFTContract.addresses()).decentralTitan;
+      const defiTitan = (await NFTContract.roles(1)).addr;
       expect(defiTitan).to.equal(defiTitanAddress);
     });
 
@@ -207,14 +197,14 @@ describe('NFT', function () {
       await expect(
         NFTContract.connect(accounts[2]).buyAGodInAuction(day, { value: afterPrice.sub(1) })
       ).to.be.revertedWith('Not Enough Ether');
-
-      const platformBalanceBefore = await ethers.provider.getBalance(accounts[1].address);
+      
+      const BalanceBefore = await ethers.provider.getBalance(accounts[2].address);
       await NFTContract.connect(accounts[11]).buyAGodInAuction(day, { value: afterPrice });
       const owner = await NFTContract.ownerOf(tokenId);
       expect(owner).to.equal(accounts[11].address);
 
-      const platformBalanceAfter = await ethers.provider.getBalance(accounts[1].address);
-      expect(platformBalanceAfter.sub(platformBalanceBefore)).to.equal(afterPrice);
+      const BalanceAfter = await ethers.provider.getBalance(accounts[2].address);
+      expect(BalanceAfter.sub(BalanceBefore)).to.equal(afterPrice);
 
       await expect(
         NFTContract.connect(accounts[2]).buyAGodInAuction(day, { value: afterPrice })
@@ -285,7 +275,7 @@ describe('NFT', function () {
         NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature)
       ).to.be.revertedWith('Not Activated');
 
-      await NFTContract.connect(accounts[0]).startWhiteListMinting();
+      await NFTContract.connect(accounts[1]).startWhiteListMinting();
 
       await expect(
         NFTContract.connect(accounts[9]).whitelistMinting(numberOfTokenAllowToMint, 2, typeOfWhiteList, signature)
@@ -320,7 +310,7 @@ describe('NFT', function () {
       const messageHashBinary = ethers.utils.arrayify(messageHash);
       const wallet = new ethers.Wallet("0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e");
       const signature = await wallet.signMessage(messageHashBinary);
-      await NFTContract.connect(accounts[0]).startWhiteListMinting();
+      await NFTContract.connect(accounts[1]).startWhiteListMinting();
 
       await expect(
         NFTContract.connect(accounts[8]).whitelistMinting(numberOfTokenAllowToMint, 160, typeOfWhiteList, signature)
@@ -346,11 +336,11 @@ describe('NFT', function () {
 
 
       await expect(
-        NFTContract.connect(accounts[0]).startPublicMinting()
+        NFTContract.connect(accounts[1]).startPublicMinting()
       ).to.be.revertedWith('Priority Issue');
 
-      await NFTContract.connect(accounts[0]).startWhiteListMinting();
-      await NFTContract.connect(accounts[0]).startPublicMinting();
+      await NFTContract.connect(accounts[1]).startWhiteListMinting();
+      await NFTContract.connect(accounts[1]).startPublicMinting();
 
       const publicMintState = (await NFTContract.state()).mintingIsActive
       expect(publicMintState).to.equal(true);
@@ -384,10 +374,10 @@ describe('NFT', function () {
       // test reveal art 
 
       await expect(
-        NFTContract.connect(accounts[0]).revealArt('')
+        NFTContract.connect(accounts[1]).revealArt('')
       ).to.be.revertedWith('CID Is Empty');
 
-      await NFTContract.connect(accounts[0]).revealArt(afterRevealArtCID_);
+      await NFTContract.connect(accounts[1]).revealArt(afterRevealArtCID_);
 
       expect((await NFTContract.state()).artIsRevealed).to.equal(true);
 
@@ -430,10 +420,10 @@ describe('NFT', function () {
       ).to.be.revertedWith('Not Finished');
 
       await expect(
-        NFTContract.connect(accounts[0]).finishMinting()
-      ).to.be.revertedWith('Only DECENTRAL_TITAN');
+        NFTContract.connect(accounts[2]).finishMinting()
+      ).to.be.revertedWith('caller is not authorized');
 
-      await NFTContract.connect(accounts[2]).finishMinting()
+      await NFTContract.connect(accounts[1]).finishMinting()
 
       await expect(
         NFTContract.connect(accounts[12]).upgradeTokenRequestFee(1)
@@ -456,10 +446,10 @@ describe('NFT', function () {
       ).to.be.equal(true);
 
       const upgradeCID = 'IPFS://QmTF2PivsUf3PQqrTAamNczxNXRR3Mj1jwJ41GaoNs3e89'
-      await NFTContract.connect(accounts[0]).upgradeToken(upgradeCID, 7, false);
+      await NFTContract.connect(accounts[1]).upgradeToken(upgradeCID, 7, false);
 
       await expect(
-        NFTContract.connect(accounts[0]).upgradeToken(upgradeCID, 7, false)
+        NFTContract.connect(accounts[1]).upgradeToken(upgradeCID, 7, false)
       ).to.be.revertedWith('Upgrade Request Fee Not Paid');
 
       expect(
