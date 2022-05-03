@@ -196,7 +196,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         state.initialized = true;
         _setupGodAuction(configs);
         state.auctionIsActive = true;
-        
+
         addresses = ContractAddresses(daoTresury, whiteListVerifier, royaltyReceiverContract);
         _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
     }
@@ -213,12 +213,19 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         addresses.daoTreasuryContract = daoTreasuryContract;
     }
 
-    function setRoyaltyReceiver(address royaltyDistributerContract) external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function setRoyaltyReceiver(address royaltyDistributerContract)
+        external
+        hasAuthorized(uint8(Actors.PLATFORM_MULTISIG))
+    {
         addresses.royaltyFeeReceiverContract = royaltyDistributerContract;
         _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
     }
 
-    function setUpgradeRequestFeeInWei(uint256 _upgradeRequestFeeInWei) external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) whileMintingDone {
+    function setUpgradeRequestFeeInWei(uint256 _upgradeRequestFeeInWei)
+        external
+        hasAuthorized(uint8(Actors.PLATFORM_MULTISIG))
+        whileMintingDone
+    {
         upgradeRequestFeeInWei = _upgradeRequestFeeInWei;
     }
 
@@ -252,7 +259,10 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         state.finished = true;
     }
 
-    function updateCID(string memory GodCid, string memory HumanCid) external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function updateCID(string memory GodCid, string memory HumanCid)
+        external
+        hasAuthorized(uint8(Actors.PLATFORM_MULTISIG))
+    {
         uint256 len1 = bytes(GodCid).length;
         if (len1 > 0) {
             ipfs.godCID = GodCid;
@@ -460,6 +470,6 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     function transferEthToDao() external payable {
         uint256 contractBalance = address(this).balance;
         require(contractBalance > 0, 'Contract Balance is Zero');
-        _transferEth(addresses.daoTreasuryContract,contractBalance);
+        _transferEth(addresses.daoTreasuryContract, contractBalance);
     }
 }
