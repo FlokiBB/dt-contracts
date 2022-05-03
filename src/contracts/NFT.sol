@@ -14,7 +14,6 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // add test for setOwnersExplicit
 // add test for transferfrom and approve
-// TODO: msg.sender or _msgSender()
 // TODO: @audit different compiler version issue between library and main contract
 contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
@@ -144,11 +143,11 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
 
     modifier onlyPlatform() {
-        require(addresses.platformMultisig == _msgSender(), 'Only Platform Address');
+        require(addresses.platformMultisig == msg.sender, 'Only Platform Address');
         _;
     }
     modifier onlyDecentralTitan() {
-        require(addresses.decentralTitan == _msgSender(), 'Only DECENTRAL_TITAN');
+        require(addresses.decentralTitan == msg.sender, 'Only DECENTRAL_TITAN');
         _;
     }
 

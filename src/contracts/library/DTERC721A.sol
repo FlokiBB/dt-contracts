@@ -8,7 +8,6 @@ import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
-import '@openzeppelin/contracts/utils/Context.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
 
@@ -43,7 +42,7 @@ error URIQueryForNonexistentToken();
  *
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
-contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
+contract DTERC721A is ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
     using Address for address;
     using Strings for uint256;
 
@@ -296,7 +295,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         address owner = DTERC721A.ownerOf(tokenId);
         if (to == owner) revert ApprovalToCurrentOwner();
 
-        if (_msgSender() != owner && !isApprovedForAll(owner, _msgSender())) {
+        if (msg.sender != owner && !isApprovedForAll(owner, msg.sender)) {
             revert ApprovalCallerNotOwnerNorApproved();
         }
 
@@ -316,10 +315,10 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
      * @dev See {IERC721-setApprovalForAll}.
      */
     function setApprovalForAll(address operator, bool approved) public override {
-        if (operator == _msgSender()) revert ApproveToCaller();
+        if (operator == msg.sender) revert ApproveToCaller();
 
-        _operatorApprovals[_msgSender()][operator] = approved;
-        emit ApprovalForAll(_msgSender(), operator, approved);
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /**
@@ -467,9 +466,9 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
     ) private {
         TokenOwnership memory prevOwnership = ownershipOf(tokenId);
 
-        bool isApprovedOrOwner = (_msgSender() == prevOwnership.addr ||
-            isApprovedForAll(prevOwnership.addr, _msgSender()) ||
-            getApproved(tokenId) == _msgSender());
+        bool isApprovedOrOwner = (msg.sender == prevOwnership.addr ||
+            isApprovedForAll(prevOwnership.addr, msg.sender) ||
+            getApproved(tokenId) == msg.sender);
 
         if (!isApprovedOrOwner) revert TransferCallerNotOwnerNorApproved();
         if (prevOwnership.addr != from) revert TransferFromIncorrectOwner();
@@ -632,7 +631,7 @@ contract DTERC721A is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerab
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
+        try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, _data) returns (bytes4 retval) {
             return retval == IERC721Receiver(to).onERC721Received.selector;
         } catch (bytes memory reason) {
             if (reason.length == 0) {
