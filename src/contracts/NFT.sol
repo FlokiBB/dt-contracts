@@ -138,7 +138,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
     modifier whileMintingDone() {
         require(state.finished, 'Not Finished');
-        require(state.initilized, 'Not Initialized');
+        require(state.initialized, 'Not Initialized');
         _;
     }
 
