@@ -438,6 +438,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         require(_totalMinted() == NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Initialization');
 
         for (uint8 i = 0; i < NUMBER_OF_TOKEN_FOR_AUCTION; i++) {
+            require(configs[i].startPrice > configs[i].endPrice, 'Bad Configs');
             Auction memory _auction = Auction(
                 i,
                 AUCTION_START_TIME + AUCTION_DURATION * i,
