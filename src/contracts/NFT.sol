@@ -14,8 +14,6 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // add test for setOwnersExplicit
 // add test for transferFrom and approve
-// TODO: msg.sender or _msgSender()
-// TODO: @audit different compiler version issue between library and main contract
 contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
@@ -140,7 +138,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
     modifier whileMintingDone() {
         require(state.finished, 'Not Finished');
-        require(state.initialized, 'Not Initialized');
+        require(state.initilized, 'Not Initialized');
         _;
     }
 
