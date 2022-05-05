@@ -74,6 +74,8 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     uint8 public constant ROYALTY_FEE_PERCENT = 10;
     uint256 public constant AUCTION_DROP_INTERVAL = 600; // in seconds
     uint8 private constant NUMBER_OF_ACTOR = 2;
+    uint8 private constant PLATFORM_MULTISIG_ROLE_ID = 0;
+    uint8 private constant DECENTRAL_TITAN_ROLE_ID = 1;
 
     struct RoyaltyInfo {
         address recipient;
@@ -112,11 +114,6 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     enum WhiteListType {
         NORMAL,
         ROYAL
-    }
-
-    enum Actors {
-        PLATFORM_MULTISIG,
-        DECENTRAL_TITAN
     }
 
     // Modifiers
@@ -162,8 +159,8 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         authorizedAddresses[1] = decentralTitan;
 
         uint8[] memory authorizedActors = new uint8[](2);
-        authorizedActors[0] = uint8(Actors.PLATFORM_MULTISIG);
-        authorizedActors[1] = uint8(Actors.DECENTRAL_TITAN);
+        authorizedActors[0] = PLATFORM_MULTISIG_ROLE_ID;
+        authorizedActors[1] = DECENTRAL_TITAN_ROLE_ID;
 
         init(authorizedAddresses, authorizedActors);
 
@@ -189,7 +186,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         address daoTresury,
         address royaltyReceiverContract,
         address whiteListVerifier
-    ) external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    ) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         require(!state.initialized, 'Already Initialized');
         require(!state.finished, 'Already Finished');
         require(!state.auctionIsActive, 'Already Activated');
@@ -201,7 +198,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
     }
 
-    function revealArt(string memory ipfsCid) external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function revealArt(string memory ipfsCid) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         require(!state.artIsRevealed, 'Already Revealed');
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID Is Empty');
@@ -209,13 +206,13 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         state.artIsRevealed = true;
     }
 
-    function setDaoTreasury(address daoTreasuryContract) external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function setDaoTreasury(address daoTreasuryContract) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         addresses.daoTreasuryContract = daoTreasuryContract;
     }
 
     function setRoyaltyReceiver(address royaltyDistributerContract)
         external
-        hasAuthorized(uint8(Actors.PLATFORM_MULTISIG))
+        hasAuthorized(PLATFORM_MULTISIG_ROLE_ID)
     {
         addresses.royaltyFeeReceiverContract = royaltyDistributerContract;
         _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
@@ -223,34 +220,34 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
 
     function setUpgradeRequestFeeInWei(uint256 _upgradeRequestFeeInWei)
         external
-        hasAuthorized(uint8(Actors.PLATFORM_MULTISIG))
+        hasAuthorized(PLATFORM_MULTISIG_ROLE_ID)
         whileMintingDone
     {
         upgradeRequestFeeInWei = _upgradeRequestFeeInWei;
     }
 
-    function startWhiteListMinting() external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function startWhiteListMinting() external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         require(state.initialized, 'Not Initialized');
         require(!state.finished, 'Already Finished');
         require(!state.whitelistMintingIsActive, 'Already Activated');
         state.whitelistMintingIsActive = true;
     }
 
-    function startPublicMinting() external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function startPublicMinting() external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         require(!state.finished, 'Already Finished');
         require(!state.mintingIsActive, 'Already Activated');
         require(state.whitelistMintingIsActive, 'Priority Issue');
         state.mintingIsActive = true;
     }
 
-    function finishAuction() external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function finishAuction() external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         require(!state.finished, 'Already Finished');
         require(state.initialized, 'Not Initialized');
         require(state.auctionIsActive, 'Not Activated');
         state.auctionIsActive = false;
     }
 
-    function finishMinting() external hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) {
+    function finishMinting() external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         require(!state.finished, 'Already Finished');
         require(state.mintingIsActive, 'Not Activated');
         state.mintingIsActive = false;
@@ -261,7 +258,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
 
     function updateCID(string memory GodCid, string memory HumanCid)
         external
-        hasAuthorized(uint8(Actors.PLATFORM_MULTISIG))
+        hasAuthorized(PLATFORM_MULTISIG_ROLE_ID)
     {
         uint256 len1 = bytes(GodCid).length;
         if (len1 > 0) {
@@ -283,7 +280,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
 
         Auction memory auction = auctions[day];
         TokenOwnership memory ownership = ownershipOf(auction.tokenId);
-        address decentralTitan = roles[uint8(Actors.DECENTRAL_TITAN)].addr;
+        address decentralTitan = roles[DECENTRAL_TITAN_ROLE_ID].addr;
 
         uint256 currentPrice = _getAuctionPrice(auction);
         require(ownership.addr == decentralTitan, 'Bad Initialization');
@@ -344,7 +341,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
 
         upgradeRequestFeeIsPaid[tokenId] = true;
 
-        address platformMultisig = roles[uint8(Actors.PLATFORM_MULTISIG)].addr;
+        address platformMultisig = roles[PLATFORM_MULTISIG_ROLE_ID].addr;
         _transferEth(platformMultisig, msg.value);
         emit UpgradeRequestPayment(tokenId, msg.value);
     }
@@ -353,7 +350,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         string memory ipfsCid,
         uint16 tokenId,
         bool isGodNow
-    ) external whileMintingDone hasAuthorized(uint8(Actors.PLATFORM_MULTISIG)) onlyHuman(tokenId) {
+    ) external whileMintingDone hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) onlyHuman(tokenId) {
         uint256 len = bytes(ipfsCid).length;
         require(len > 0, 'CID is empty');
         require(upgradeRequestFeeIsPaid[tokenId], 'Upgrade Request Fee Not Paid');
@@ -439,7 +436,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         require(_totalMinted() + NUMBER_OF_TOKEN_FOR_AUCTION <= MAX_SUPPLY, 'Receive To Max Supply');
         require(configs.length == NUMBER_OF_TOKEN_FOR_AUCTION, 'Bad Configs Length');
 
-        address decentralTitan = roles[uint8(Actors.DECENTRAL_TITAN)].addr;
+        address decentralTitan = roles[DECENTRAL_TITAN_ROLE_ID].addr;
         _safeMint(decentralTitan, NUMBER_OF_TOKEN_FOR_AUCTION);
 
         // we need set first token id to the token sell in auction for CID availability.
