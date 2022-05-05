@@ -210,10 +210,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         addresses.daoTreasuryContract = daoTreasuryContract;
     }
 
-    function setRoyaltyReceiver(address royaltyDistributerContract)
-        external
-        hasAuthorized(PLATFORM_MULTISIG_ROLE_ID)
-    {
+    function setRoyaltyReceiver(address royaltyDistributerContract) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         addresses.royaltyFeeReceiverContract = royaltyDistributerContract;
         _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
     }
@@ -256,10 +253,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         state.finished = true;
     }
 
-    function updateCID(string memory GodCid, string memory HumanCid)
-        external
-        hasAuthorized(PLATFORM_MULTISIG_ROLE_ID)
-    {
+    function updateCID(string memory GodCid, string memory HumanCid) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
         uint256 len1 = bytes(GodCid).length;
         if (len1 > 0) {
             ipfs.godCID = GodCid;
