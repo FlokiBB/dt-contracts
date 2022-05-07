@@ -2,11 +2,11 @@ node_modules
 .env
 coverage
 coverage.json
-typechain
+src/types
 
 #Hardhat files
-build/cache
-build/artifacts
+cache
+
 
 #compiled js from typescript
 hardhat.config.js
@@ -16,3 +16,6 @@ src/test/*.js
 #other
 .vscode
 venv
+.venv
+
+artifacts

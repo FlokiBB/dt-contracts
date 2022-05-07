@@ -1,16 +1,19 @@
-<H2> smartcontracts of nepoleia platform:</h1>
+<H2> contracts of DemmorTaltreasure :</h2>
 
-* NepoleiaNFT
-* BuyBackTreasury
-* GameTreasury
-* NepoleiaRoyaltyFeeDistributor
-* FundDistributor
-* MultiSig
+- NFT
+- BuyBackTreasury
+- GameTreasury
+- RoyaltyFeeDistributor
+- FundDistributor
+- MultiSig
+- guaranty prize contract
 
-***
+---
 
-protocol flowchart should be add to here
+<H2>Flowchart:</h2>
 
-***
+![image flowchart](./Flowchart.png)
 
-(Floki The Boat Builder)
+---
+
+(Floki The Boat Builder && Meti.eth)
