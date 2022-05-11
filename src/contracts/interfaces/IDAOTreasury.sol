@@ -4,7 +4,7 @@
 pragma solidity 0.8.4;
 
 interface IDAOTreasury {
-    function buybackNFT() external returns (bool);
-    function mintPriceDeposit() external payable returns (bool);
-    function gameTresuryDeposit() external payable returns (bool);
+    function buybackNFT(address nftOwner) external returns (bool);
+    function mintPriceDeposit(uint256 amount) external payable returns (bool);
+    function gameTresuryDeposit(uint256 amount) external payable returns (bool);
 }
