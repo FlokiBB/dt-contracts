@@ -1,0 +1,7 @@
+[
+  "function MAX_SUPPLY() view returns (uint16)",
+  "function MINT_PRICE_IN_WEI() view returns (uint256)",
+  "function NUMBER_OF_TOKEN_FOR_AUCTION() view returns (uint8)",
+  "function addresses() view returns (tuple(address,address,address))",
+  "function state() view returns (tuple(bool,bool,bool,bool,bool,bool))"
+]
