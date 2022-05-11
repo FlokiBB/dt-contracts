@@ -1,0 +1,5 @@
+[
+  "function buyback() returns (bool)",
+  "function gameTresuryDeposit() payable returns (bool)",
+  "function mintPriceDeposit() payable returns (bool)"
+]

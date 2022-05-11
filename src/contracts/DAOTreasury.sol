@@ -4,26 +4,30 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-contract DAOTreasury is UUPSUpgradeable{
+import "./library/DTAuth.sol";
+import "./interfaces/ICollectiGame.sol";
 
-        address internal owner;
-    uint256 internal length;
-    uint256 internal width;
-    uint256 internal height;
+//NOTE: buyback should only work when the collectigame contract has initialized state:
+// ICollectiGame(addr).state().initialized == true
+//Note: when buyback called 10% of the floor price should going the the GameTreasury Contract
+//Note: buyback should have only CollectiGame modifier
 
-    function initialize(uint256 l, uint256 w, uint256 h) public initializer {
-        owner = msg.sender;
-        length = l;
-        width = w;
-        height = h;
+contract DAOTreasury is UUPSUpgradeable, DTAuth(1) {
+
+    address public daoMultisig;
+    address public collectigame;
+    uint256 public startTime;
+
+    event ChangeAnnouncement(address daoMultisig, address newImplementation);
+
+    function initialize(address daoMultisig_) public initializer {
+        daoMultisig = daoMultisig_;
     }
 
-    function volume() public view returns (uint256) {
-        return length * width * height;
-    }
 
     function _authorizeUpgrade(address newImplementation) internal override virtual {
-        require(msg.sender == owner, "Unauthorized Upgrade");
+        require(msg.sender == daoMultisig, "Unauthorized Upgrade");
+        emit ChangeAnnouncement(daoMultisig, newImplementation);
     }
     
 }

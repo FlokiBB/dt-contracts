@@ -1,0 +1,21 @@
+[
+  "event AdminChanged(address,address)",
+  "event BeaconUpgraded(address indexed)",
+  "event ChangeAnnouncement(address,address)",
+  "event Initialized(uint8)",
+  "event RoleAccepted(uint8 indexed,address indexed,address indexed)",
+  "event RoleProposed(uint8 indexed,address indexed,address indexed)",
+  "event Upgraded(address indexed)",
+  "function acceptAuthority(uint8)",
+  "function collectigame() view returns (address)",
+  "function daoMultisig() view returns (address)",
+  "function initialize(address)",
+  "function numberOfRoles() view returns (uint8)",
+  "function proposeAuthority(uint8,address)",
+  "function proxiableUUID() view returns (bytes32)",
+  "function renounceAuthority(uint8)",
+  "function roles(uint8) view returns (address, address, bool)",
+  "function startTime() view returns (uint256)",
+  "function upgradeTo(address)",
+  "function upgradeToAndCall(address,bytes) payable"
+]

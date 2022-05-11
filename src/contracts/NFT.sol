@@ -55,7 +55,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     struct ContractAddresses {
         address daoTreasuryContract;
         address whiteListVerifier;
-        address royaltyFeeReceiverContract;
+        address gameTreasuryContract;
     }
     ContractAddresses public addresses;
 
@@ -183,7 +183,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     // State Management related functions.
     function initializer(
         AuctionConfig[] calldata configs,
-        address daoTresury,
+        address daoTreasury,
         address royaltyReceiverContract,
         address whiteListVerifier
     ) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
@@ -194,8 +194,8 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         _setupGodAuction(configs);
         state.auctionIsActive = true;
 
-        addresses = ContractAddresses(daoTresury, whiteListVerifier, royaltyReceiverContract);
-        _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
+        addresses = ContractAddresses(daoTreasury, whiteListVerifier, royaltyReceiverContract);
+        _setRoyalties(addresses.gameTreasuryContract, ROYALTY_FEE_PERCENT);
     }
 
     function revealArt(string memory ipfsCid) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
@@ -211,8 +211,8 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     }
 
     function setRoyaltyReceiver(address royaltyDistributerContract) external hasAuthorized(PLATFORM_MULTISIG_ROLE_ID) {
-        addresses.royaltyFeeReceiverContract = royaltyDistributerContract;
-        _setRoyalties(addresses.royaltyFeeReceiverContract, ROYALTY_FEE_PERCENT);
+        addresses.gameTreasuryContract = royaltyDistributerContract;
+        _setRoyalties(addresses.gameTreasuryContract, ROYALTY_FEE_PERCENT);
     }
 
     function setUpgradeRequestFeeInWei(uint256 _upgradeRequestFeeInWei)
