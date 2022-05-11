@@ -357,7 +357,7 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
         emit TokenUpgraded(tokenId);
     }
 
-    function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant {
+    function buyBackToken(uint16 tokenId) external onlyHuman(tokenId) nonReentrant  whileInitialized{
         require(_exists(tokenId), 'Token Not Exists');
         TokenOwnership memory ownership = ownershipOf(tokenId);
         require(msg.sender == ownership.addr, 'Is Not Owner');
