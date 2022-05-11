@@ -3,57 +3,27 @@
 
 pragma solidity ^0.8.4;
 
-// TODO: think about contract deploymnet pirority and change NFT contract constructor
-// TODO: write this function pausable and in future proof maner
-// contract DAOTreasury {
-//     uint256 public collectionSupply;
-//     uint256 public MintPrice;
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+contract DAOTreasury is UUPSUpgradeable{
 
-//     constructor()  {
-//         collectionSupply = 0;
-//         MintPrice = 1;
-//     }
+        address internal owner;
+    uint256 internal length;
+    uint256 internal width;
+    uint256 internal height;
 
-//     function daoTransfer (address _to, uint256 _value) {
-//         require(_to != address(0));
-//         require(_value > 0);
-//         require(msg.sender.balance >= _value);
-//         msg.sender.transfer(_to, _value);
-//     }
+    function initialize(uint256 l, uint256 w, uint256 h) public initializer {
+        owner = msg.sender;
+        length = l;
+        width = w;
+        height = h;
+    }
 
-//     function buyBackNFT(uint256 _id) public {
-//         require(_id > 0);
-//         require(collectionSupply >= _id);
-//         require(MintPrice > 0);
-//     }
+    function volume() public view returns (uint256) {
+        return length * width * height;
+    }
 
-//     releaseFundDuringMinting (uint256 _id) {
-//         collectionSupply += 1;
-//     }
-
-//     // month 3,4,5
-//     releaseTeamFund(){
-
-//     }
-
-//     // month 6,7,8
-//     releaseDDDFund(){
-
-//     }
-
-//     depositMintPrice(uint256 _price) {
-//         require(_price > 0);
-//         MintPrice = _price;
-//     }
-
-//     depositeWeeklyCollectionRoyaltyShare(uint256 _amount) {
-//         require(_amount > 0);
-//         collectionSupply += _amount;
-//     }
-
-//     getBalance(uint256 _amount) {
-//         require(_amount > 0);
-//         collectionSupply += _amount;
-//     }
-
-// }
+    function _authorizeUpgrade(address newImplementation) internal override virtual {
+        require(msg.sender == owner, "Unauthorized Upgrade");
+    }
+    
+}
