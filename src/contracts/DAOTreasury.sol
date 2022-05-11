@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./library/DTAuth.sol";
 import "./interfaces/ICollectiGame.sol";
 import "./interfaces/IDAOTreasury.sol";
+import "./interfaces/IGameTreasury.sol";
 
 //NOTE: buyback should only work when the collectigame contract has initialized state:
 // ICollectiGame(addr).state().initialized == true
@@ -23,23 +24,18 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
     address public collectigame;
     address public gameTreasury;
     uint256 public guaranteedFlorPrice;
-    bool public isSetup = false;
     uint256 public  buybackTaxRation;
 
 
 
     event ChangeAnnouncement(address daoMultisig, address newImplementation);
 
-    modifier IsSetup() {
-        require(isSetup, 'Not Initialized');
-        _;
-    }
     modifier OnlyCollectigame() {
         require(msg.sender == collectigame, 'Caller Is Not Collectigame');
         _;
     }
 
-    function initialize(address daoMultisig_) public initializer {
+    function initialize(address daoMultisig_, address collectigame_, address gameTreasury_, uint256 buybackTaxRation_) public initializer {
         daoMultisig = daoMultisig_;
 
         address[] memory authorizedAddresses = new address[](1);
@@ -49,24 +45,20 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         authorizedActors[0] = DAO_ROLE_ID;
 
         init(authorizedAddresses, authorizedActors);
-    }
 
-    function getTreasuryBalance() public view returns (uint256) {
-        return address(this).balance;
-    }
-
-
-    function setup(address collectigame_, address gameTreasury_, uint256 buybackTaxRation_) external hasAuthorized(DAO_ROLE_ID) {
         collectigame = collectigame_;
         gameTreasury = gameTreasury_;
 
         guaranteedFlorPrice = ICollectiGame(collectigame).MINT_PRICE_IN_WEI();
 
         buybackTaxRation = buybackTaxRation_;
-        isSetup = true;
     }
 
-    function buybackNFT(address nftOwner) external override IsSetup OnlyCollectigame returns (bool) {
+    function getTreasuryBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function buybackNFT(address nftOwner) external override OnlyCollectigame returns (bool) {
         ICollectiGame.ContractState memory collectigameState = ICollectiGame(collectigame).state();
         require(collectigameState.initialized == true, "CollectiGame contract has not initialized yet");
 
@@ -74,7 +66,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         require(tresuryBalance > guaranteedFlorPrice, "Treasury balance is not enough to buyback");
 
         uint256 tax = guaranteedFlorPrice * buybackTaxRation / 100;
-        _transferEth(gameTreasury, tax);
+        IGameTreasury(gameTreasury).buybackTax(tax);
 
         uint256 buybackAmount = guaranteedFlorPrice - tax;
         _transferEth(nftOwner, buybackAmount);

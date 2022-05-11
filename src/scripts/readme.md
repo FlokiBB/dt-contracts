@@ -7,6 +7,6 @@
     5. Check security section on the Github
 
     6. Deploy NFT contract to the network
-    7. Deploy DAOTreasury contract to the network
-    8. Deploy GameTreasuryV0 contract to the network
+    7. Deploy GameTreasuryV0 contract to the network
+    8. Deploy DAOTreasury contract to the network
     9. Call `initializer` on the NFT contract with needed parameters
