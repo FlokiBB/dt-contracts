@@ -1,5 +1,5 @@
 [
   "function buybackNFT(address) returns (bool)",
-  "function gameTresuryDeposit() payable returns (bool)",
-  "function mintPriceDeposit() payable returns (bool)"
+  "function gameTresuryDeposit(uint256) payable returns (bool)",
+  "function mintPriceDeposit(uint256) payable returns (bool)"
 ]

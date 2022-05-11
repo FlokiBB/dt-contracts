@@ -9,10 +9,6 @@ import "./interfaces/ICollectiGame.sol";
 import "./interfaces/IDAOTreasury.sol";
 import "./interfaces/IGameTreasury.sol";
 
-//NOTE: buyback should only work when the collectigame contract has initialized state:
-// ICollectiGame(addr).state().initialized == true
-//Note: when buyback called 10% of the floor price should going the the GameTreasury Contract
-//Note: buyback should have only CollectiGame modifier
 
 contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
 
@@ -54,11 +50,11 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         buybackTaxRation = buybackTaxRation_;
     }
 
-    function getTreasuryBalance() public view returns (uint256) {
+    function getTreasuryBalance() public view virtual returns (uint256) {
         return address(this).balance;
     }
 
-    function buybackNFT(address nftOwner) external override OnlyCollectigame returns (bool) {
+    function buybackNFT(address nftOwner) external override virtual OnlyCollectigame returns (bool) {
         ICollectiGame.ContractState memory collectigameState = ICollectiGame(collectigame).state();
         require(collectigameState.initialized == true, "CollectiGame contract has not initialized yet");
 
@@ -73,23 +69,32 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
 
         return true;
     }
-    function mintPriceDeposit(uint256 amount) external override payable returns (bool){
+    function mintPriceDeposit(uint256 amount) external override virtual payable returns (bool){
         require(msg.value >= amount, "Amount is not enough");
         return true;
     }
-    function gameTresuryDeposit(uint256 amount) external override payable returns (bool){
+    function gameTresuryDeposit(uint256 amount) external override virtual payable returns (bool){
         require(msg.value >= amount, "Amount is not enough");
         return true;
     }
 
-    function setBuybackTaxRatio(uint256 buybackTaxRation_) external hasAuthorized(DAO_ROLE_ID) {
+    function setBuybackTaxRatio(uint256 buybackTaxRation_) external virtual hasAuthorized(DAO_ROLE_ID) {
         buybackTaxRation = buybackTaxRation_;
     }
 
+    function increaseGuaranteedFlorPrice(uint256 increaseAmount) external virtual hasAuthorized(DAO_ROLE_ID) {
+        uint256 maxSupply = uint256(ICollectiGame(collectigame).MAX_SUPPLY());
+        uint256 numberOfGod = uint256(ICollectiGame(collectigame).NUMBER_OF_TOKEN_FOR_AUCTION());
+        uint256 neededBalance = (maxSupply - numberOfGod) * guaranteedFlorPrice;
+        uint256 treasuryBalance = getTreasuryBalance();
+        require(treasuryBalance >= neededBalance, "Treasury balance is not enough to increase guaranteed flor price");
+        guaranteedFlorPrice += increaseAmount;
+    }
 
 
 
-    function _transferEth(address to_, uint256 amount) private {
+
+    function _transferEth(address to_, uint256 amount) internal virtual {
         address payable to = payable(to_);
         (bool sent, ) = to.call{value: amount}('');
         require(sent, 'Transfer Failed');

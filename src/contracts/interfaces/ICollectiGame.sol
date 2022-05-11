@@ -6,7 +6,7 @@ pragma solidity 0.8.4;
 // CollectiGame : Collectible + Game
 // interface of NFT.sol for interacting with it from other contracts
 interface ICollectiGame {
-    function MAX_SUPPLY() external view returns (uint256);
+    function MAX_SUPPLY() external view returns (uint16);
 
     struct ContractState {
         bool initialized;
@@ -26,4 +26,6 @@ interface ICollectiGame {
     function addresses() external view returns (ContractAddresses memory);
 
     function MINT_PRICE_IN_WEI() external view returns (uint256);
+    
+    function NUMBER_OF_TOKEN_FOR_AUCTION() external view returns (uint8);
 }
