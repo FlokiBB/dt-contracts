@@ -24,6 +24,9 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1) {
         daoMultisig = daoMultisig_;
     }
 
+    function getBalance () public view returns (uint256) {
+        return address(this).balance;
+    }
 
     function _authorizeUpgrade(address newImplementation) internal override virtual {
         require(msg.sender == daoMultisig, "Unauthorized Upgrade");

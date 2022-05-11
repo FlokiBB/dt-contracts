@@ -4,5 +4,5 @@
 pragma solidity 0.8.4;
 
 interface IGameTreasury {
-    function buybackFee() external payable returns (bool);
+    function buybackTax() external payable returns (bool);
 }
