@@ -16,6 +16,7 @@ interface ICollectiGame {
         bool artIsRevealed;
         bool finished;
     }
+
     function state() external view returns (ContractState memory);
 
     struct ContractAddresses {
@@ -23,9 +24,10 @@ interface ICollectiGame {
         address whiteListVerifier;
         address gameTreasuryContract;
     }
+
     function addresses() external view returns (ContractAddresses memory);
 
     function MINT_PRICE_IN_WEI() external view returns (uint256);
-    
+
     function NUMBER_OF_TOKEN_FOR_AUCTION() external view returns (uint8);
 }
