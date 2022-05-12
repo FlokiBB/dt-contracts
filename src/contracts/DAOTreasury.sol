@@ -104,7 +104,8 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         require(tresuryBalance > guaranteedFlorPrice, 'Treasury balance is not enough to buyback');
 
         uint256 tax = (guaranteedFlorPrice * buybackTaxRation) / 100;
-        IGameTreasury(gameTreasury).buybackTax(tax);
+        bool taxPayingStatus = IGameTreasury(gameTreasury).buybackTax(tax);
+        require(taxPayingStatus, 'Tax paying failed');
 
         uint256 buybackAmount = guaranteedFlorPrice - tax;
         collectigameSupply -= 1;
