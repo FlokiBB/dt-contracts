@@ -16,4 +16,4 @@
 
 ---
 
-(Floki The Boat Builder && Meti.eth)
+(FlokiBB: Floki The Boat Builder)
