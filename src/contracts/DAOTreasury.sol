@@ -32,7 +32,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
     mapping(uint8 => Release) public ethReleasesPlan;
     mapping(uint8 => string) public ethReleasesPlanDescription;
 
-    struct Proposal{
+    struct Proposal {
         string title;
         uint256 fundRequestAmount;
         uint256 votingStartTime;
@@ -114,22 +114,40 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         return true;
     }
 
-    function newDaoFundRequestProposal (string calldata snapShotId, string calldata title, uint256 fundRequestAmount,  uint256 votingStartTime, uint256 votingEndTime, address fundReceiver  ) external virtual isDaoReady {
+    function newDaoFundRequestProposal(
+        string calldata snapShotId,
+        string calldata title,
+        uint256 fundRequestAmount,
+        uint256 votingStartTime,
+        uint256 votingEndTime,
+        address fundReceiver
+    ) external virtual isDaoReady {
         uint256 tresuryBalance = getTreasuryBalance();
         require(tresuryBalance > fundRequestAmount, 'Treasury balance is not enough to fund the proposal');
         require(votingStartTime < votingEndTime, 'Voting start time should be earlier than voting end time');
 
-        Proposal memory proposal = Proposal(title, fundRequestAmount, votingStartTime, votingEndTime, fundReceiver, false);
+        Proposal memory proposal = Proposal(
+            title,
+            fundRequestAmount,
+            votingStartTime,
+            votingEndTime,
+            fundReceiver,
+            false
+        );
         daoProposals[snapShotId] = proposal;
         daoProposalIds.push(snapShotId);
-
     }
 
-    function acceptDaoFundRequestProposal(string calldata snapShotId) external virtual hasAuthorized(DAO_ROLE_ID) isDaoReady {
+    function acceptDaoFundRequestProposal(string calldata snapShotId)
+        external
+        virtual
+        hasAuthorized(DAO_ROLE_ID)
+        isDaoReady
+    {
         Proposal storage proposal = daoProposals[snapShotId];
-        require(!proposal.isFunded , 'Proposal has already been funded');
+        require(!proposal.isFunded, 'Proposal has already been funded');
         uint256 week = 7 * 24 * 60 * 60;
-        require(proposal.votingEndTime  <= block.timestamp, 'Proposal is not ready to be funded');
+        require(proposal.votingEndTime <= block.timestamp, 'Proposal is not ready to be funded');
         require(proposal.votingEndTime + week >= block.timestamp, 'Proposal funding time is past');
         uint256 tresuryBalance = getTreasuryBalance();
         require(tresuryBalance >= proposal.fundRequestAmount, 'Treasury balance is not enough to fund the proposal');
@@ -137,6 +155,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
 
         _transferEth(proposal.proposer, proposal.fundRequestAmount);
     }
+
     function proposalStatus(string calldata id) external view virtual returns (ProposalStatus) {
         Proposal memory proposal = daoProposals[id];
 
@@ -150,6 +169,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
             return ProposalStatus.PENDING;
         }
     }
+
     function setupReleasePlan() external virtual {
         require(!isSetup, 'Already Setup');
         uint8 releaseId = 0;
