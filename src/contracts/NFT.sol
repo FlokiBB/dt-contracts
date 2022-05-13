@@ -43,9 +43,9 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
     uint16 public constant override MAX_SUPPLY = 7777;
     uint256 public upgradeRequestFeeInWei;
 
-    ContractState public  state;
-    ContractAddresses public addresses;
-    ContractIPFS public ipfs;
+    ContractState private  state;
+    ContractAddresses private addresses;
+    ContractIPFS private ipfs;
 
     uint256 public constant override MINT_PRICE_IN_WEI = 0.05 * 10**18;
     uint16 public constant MAX_MINT_PER_ADDRESS = 3;
