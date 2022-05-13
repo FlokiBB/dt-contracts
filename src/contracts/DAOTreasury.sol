@@ -26,7 +26,6 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
     mapping(uint8 => Release) public ethReleasesPlan;
     mapping(uint8 => string) public ethReleasesPlanDescription;
 
-
     mapping(string => Proposal) public daoProposals;
     string[] public daoProposalIds;
 

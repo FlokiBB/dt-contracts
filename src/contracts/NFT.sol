@@ -43,7 +43,7 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
     uint16 public constant override MAX_SUPPLY = 7777;
     uint256 public upgradeRequestFeeInWei;
 
-    ContractState private  state;
+    ContractState private state;
     ContractAddresses private addresses;
     ContractIPFS private ipfs;
 
@@ -57,7 +57,6 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
     uint8 private constant NUMBER_OF_ACTOR = 2;
     uint8 private constant PLATFORM_MULTISIG_ROLE_ID = 0;
     uint8 private constant DECENTRAL_TITAN_ROLE_ID = 1;
-
 
     RoyaltyInfo private _royalties;
 

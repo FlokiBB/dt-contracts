@@ -19,6 +19,7 @@ interface IDAOTreasury {
         address proposer;
         bool isFunded;
     }
+
     function buybackNFT(address nftOwner) external returns (bool);
 
     function mintPriceDeposit(uint256 amount) external payable returns (bool);
