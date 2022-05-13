@@ -23,23 +23,10 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
     uint256 public daoProposalFundingStartTime;
     bool private isSetup = false;
 
-    struct Release {
-        uint256 amountOrPercent;
-        uint256 releaseDate;
-        address receiver;
-        bool isReleased;
-    }
     mapping(uint8 => Release) public ethReleasesPlan;
     mapping(uint8 => string) public ethReleasesPlanDescription;
 
-    struct Proposal {
-        string title;
-        uint256 fundRequestAmount;
-        uint256 votingStartTime;
-        uint256 votingEndTime;
-        address proposer;
-        bool isFunded;
-    }
+
     mapping(string => Proposal) public daoProposals;
     string[] public daoProposalIds;
 
@@ -97,7 +84,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
     }
 
     function buybackNFT(address nftOwner) external virtual override OnlyCollectigame returns (bool) {
-        ICollectiGame.ContractState memory collectigameState = ICollectiGame(collectigame).state();
+        ICollectiGame.ContractState memory collectigameState = ICollectiGame(collectigame).getState();
         require(collectigameState.initialized == true, 'CollectiGame contract has not initialized yet');
 
         uint256 tresuryBalance = getTreasuryBalance();

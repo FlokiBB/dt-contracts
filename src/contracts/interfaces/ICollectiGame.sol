@@ -6,8 +6,7 @@ pragma solidity 0.8.4;
 // CollectiGame : Collectible + Game
 // interface of NFT.sol for interacting with it from other contracts
 interface ICollectiGame {
-    function MAX_SUPPLY() external view returns (uint16);
-
+    
     struct ContractState {
         bool initialized;
         bool auctionIsActive;
@@ -17,7 +16,31 @@ interface ICollectiGame {
         bool finished;
     }
 
-    function state() external view returns (ContractState memory);
+    struct ContractIPFS {
+        string godCID;
+        string notRevealedArtCID;
+        string artCID;
+    }
+
+    struct RoyaltyInfo {
+        address recipient;
+        uint8 percent;
+    }
+
+    struct AuctionConfig {
+        uint256 startPrice; // in wei
+        uint256 endPrice; // in wei
+        uint256 auctionDropPerStep; // in wei
+    }
+    struct Auction {
+        uint8 tokenId;
+        uint256 startAt; // epoch time
+        uint256 expireAt; // epoch time
+        uint256 startPrice; // in wei
+        uint256 endPrice; // in wei
+        uint256 auctionDropPerStep; // in wei
+        bool isSold;
+    }
 
     struct ContractAddresses {
         address daoTreasuryContract;
@@ -25,9 +48,14 @@ interface ICollectiGame {
         address gameTreasuryContract;
     }
 
-    function addresses() external view returns (ContractAddresses memory);
+    function MAX_SUPPLY() external view returns (uint16);
+
+    function getState() external view returns (ContractState memory);
+
+    function getAddresses() external view returns (ContractAddresses memory);
 
     function MINT_PRICE_IN_WEI() external view returns (uint256);
 
     function NUMBER_OF_TOKEN_FOR_AUCTION() external view returns (uint8);
+
 }

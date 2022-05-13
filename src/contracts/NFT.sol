@@ -6,15 +6,16 @@ pragma solidity 0.8.4;
 import './library/DTERC721A.sol';
 import './library/DTOwnable.sol';
 import './library/DTAuth.sol';
-
 import './interfaces/IERC2981Royalties.sol';
+import './interfaces/IDAOTreasury.sol';
+import './interfaces/ICollectiGame.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // add test for setOwnersExplicit
 // add test for transferFrom and approve
-contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
+contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
     // *******************************************************************************
@@ -39,37 +40,17 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     // *******************************************************************************
 
     // State variables
-    uint16 public constant MAX_SUPPLY = 7777;
+    uint16 public constant override MAX_SUPPLY = 7777;
     uint256 public upgradeRequestFeeInWei;
 
-    struct ContractState {
-        bool initialized;
-        bool auctionIsActive;
-        bool whitelistMintingIsActive;
-        bool mintingIsActive;
-        bool artIsRevealed;
-        bool finished;
-    }
-    ContractState public state;
-
-    struct ContractAddresses {
-        address daoTreasuryContract;
-        address whiteListVerifier;
-        address gameTreasuryContract;
-    }
+    ContractState public  state;
     ContractAddresses public addresses;
-
-    struct ContractIPFS {
-        string godCID;
-        string notRevealedArtCID;
-        string artCID;
-    }
     ContractIPFS public ipfs;
 
-    uint256 public constant MINT_PRICE_IN_WEI = 0.05 * 10**18;
+    uint256 public constant override MINT_PRICE_IN_WEI = 0.05 * 10**18;
     uint16 public constant MAX_MINT_PER_ADDRESS = 3;
     uint256 public immutable AUCTION_START_TIME; // epoch time
-    uint8 public constant NUMBER_OF_TOKEN_FOR_AUCTION = 3;
+    uint8 public constant override NUMBER_OF_TOKEN_FOR_AUCTION = 3;
     uint256 public constant AUCTION_DURATION = 86400; // in seconds
     uint8 public constant ROYALTY_FEE_PERCENT = 10;
     uint256 public constant AUCTION_DROP_INTERVAL = 600; // in seconds
@@ -77,32 +58,13 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
     uint8 private constant PLATFORM_MULTISIG_ROLE_ID = 0;
     uint8 private constant DECENTRAL_TITAN_ROLE_ID = 1;
 
-    struct RoyaltyInfo {
-        address recipient;
-        uint8 percent;
-    }
+
     RoyaltyInfo private _royalties;
 
     mapping(uint16 => bool) public tokenIsUpgraded;
     mapping(uint16 => string) private _upgradedTokenCIDs;
     mapping(uint16 => bool) public isGodToken;
-
-    struct AuctionConfig {
-        uint256 startPrice; // in wei
-        uint256 endPrice; // in wei
-        uint256 auctionDropPerStep; // in wei
-    }
-    struct Auction {
-        uint8 tokenId;
-        uint256 startAt; // epoch time
-        uint256 expireAt; // epoch time
-        uint256 startPrice; // in wei
-        uint256 endPrice; // in wei
-        uint256 auctionDropPerStep; // in wei
-        bool isSold;
-    }
     mapping(uint8 => Auction) public auctions;
-
     mapping(uint256 => bool) public upgradeRequestFeeIsPaid;
 
     // Events
@@ -377,6 +339,14 @@ contract NFT is DTERC721A, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties
 
     function setOwnersExplicit(uint256 quantity) external {
         _setOwnersExplicit(quantity);
+    }
+
+    function getState() external view override returns (ICollectiGame.ContractState memory) {
+        return state;
+    }
+
+    function getAddresses() external view override returns (ICollectiGame.ContractAddresses memory) {
+        return addresses;
     }
 
     function tokenURI(uint256 tokenId_) public view override returns (string memory) {
