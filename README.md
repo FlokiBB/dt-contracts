@@ -1,15 +1,15 @@
 <H2> contracts of DemmortalTreasure Platform:</h2>
 
 ### contracts
-    - NFT
-    - [DAOTreasury](https://github.com/DeDogmaDao/dt-contracts/blob/development/src/contracts/DAOTreasury.sol)
-    - GameTreasury
-    - InvestmentTreasury
-    - WeeklyFundDistributor
+- [NFT](./src/contracts/NFT.sol)
+-  [DAOTreasury](./src/contracts/DAOTreasury.sol)
+- GameTreasury (WIP)
+- InvestmentTreasury (WIP)
+- WeeklyFundDistributor (WIP)
 ### libraries
-    - DTERC721A
-    - DTOwnable
-    - DTAuth
+- [DTERC721A](./src/contracts/library/DTERC721A.sol)
+- [DTOwnable](./src/contracts/library/DTOwnable.sol)
+- [DTAuth](./src/contracts/library/DTAuth.sol)
 
 
 ---
