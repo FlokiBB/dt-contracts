@@ -2,7 +2,7 @@
 
 ### contracts
     - NFT
-    - DAOTreasury
+    - [DAOTreasury](https://github.com/DeDogmaDao/dt-contracts/blob/development/src/contracts/DAOTreasury.sol)
     - GameTreasury
     - InvestmentTreasury
     - WeeklyFundDistributor
