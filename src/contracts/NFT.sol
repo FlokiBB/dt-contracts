@@ -277,7 +277,8 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
             _safeMint(msg.sender, quantity);
         }
         if (msg.value > 0) {
-            _transferEth(addresses.daoTreasuryContract, msg.value);
+            bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).mintPriceDeposit(msg.value);
+            require(depositStatus, "eth transfer failed");
         }
     }
 
@@ -286,7 +287,9 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
         require(_numberMinted(msg.sender) + quantity <= MAX_MINT_PER_ADDRESS, 'Receive To Max Mint Per Address');
         require(quantity * MINT_PRICE_IN_WEI <= msg.value, 'Not Enoughs Ether');
         _safeMint(msg.sender, quantity);
-        _transferEth(addresses.daoTreasuryContract, msg.value);
+        
+        bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).mintPriceDeposit(msg.value);
+        require(depositStatus, "eth transfer failed");
     }
 
     // Token Upgradeability related functions.
@@ -323,7 +326,8 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
         TokenOwnership memory ownership = ownershipOf(tokenId);
         require(msg.sender == ownership.addr, 'Is Not Owner');
         _burn(tokenId);
-        // TODO: in here we should call function from BuyBack treasury contract and give it the msg.sender as a parameter
+        bool buybackStatus = IDAOTreasury(addresses.daoTreasuryContract).buybackNFT(ownership.addr);
+        require(buybackStatus, 'buyback failed');
     }
 
     function royaltyInfo(uint256, uint256 value)
@@ -427,9 +431,10 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
         require(sent, 'Transfer Failed');
     }
 
-    function transferEthToDao() external payable {
+    function transferEthToDao() external payable whileMintingDone {
         uint256 contractBalance = address(this).balance;
         require(contractBalance > 0, 'Contract Balance is Zero');
-        _transferEth(addresses.daoTreasuryContract, contractBalance);
+        bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).generalDeposit(contractBalance);
+        require(depositStatus, 'eth transfer failed');
     }
 }

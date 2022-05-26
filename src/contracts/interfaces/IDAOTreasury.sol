@@ -24,5 +24,7 @@ interface IDAOTreasury {
 
     function mintPriceDeposit(uint256 amount) external payable returns (bool);
 
+    function generalDeposit(uint256 amount) external payable returns (bool);
+
     function gameTresuryDeposit(uint256 amount) external payable returns (bool);
 }

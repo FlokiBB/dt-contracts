@@ -199,6 +199,11 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         return true;
     }
 
+    function generalDeposit(uint256 amount) external payable virtual override returns (bool) {
+        require(msg.value >= amount, 'Amount is not enough');
+        return true;
+    }
+
     function gameTresuryDeposit(uint256 amount) external payable virtual override returns (bool) {
         require(msg.value >= amount, 'Amount is not enough');
         return true;

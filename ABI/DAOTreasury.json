@@ -20,6 +20,7 @@
   "function ethReleasesPlanDescription(uint8) view returns (string)",
   "function gameTreasury() view returns (address)",
   "function gameTresuryDeposit(uint256) payable returns (bool)",
+  "function generalDeposit(uint256) payable returns (bool)",
   "function getTreasuryBalance() view returns (uint256)",
   "function guaranteedFlorPrice() view returns (uint256)",
   "function increaseGuaranteedFlorPrice(uint256)",
