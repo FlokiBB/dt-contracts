@@ -278,7 +278,7 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
         }
         if (msg.value > 0) {
             bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).mintPriceDeposit(msg.value);
-            require(depositStatus, "eth transfer failed");
+            require(depositStatus, 'eth transfer failed');
         }
     }
 
@@ -287,9 +287,9 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
         require(_numberMinted(msg.sender) + quantity <= MAX_MINT_PER_ADDRESS, 'Receive To Max Mint Per Address');
         require(quantity * MINT_PRICE_IN_WEI <= msg.value, 'Not Enoughs Ether');
         _safeMint(msg.sender, quantity);
-        
+
         bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).mintPriceDeposit(msg.value);
-        require(depositStatus, "eth transfer failed");
+        require(depositStatus, 'eth transfer failed');
     }
 
     // Token Upgradeability related functions.
