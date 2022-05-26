@@ -1,3 +1,4 @@
 [
-  "function buybackTax(uint256) payable returns (bool)"
+  "function buybackTax(uint256) payable returns (bool)",
+  "function migrateToNewVersion() returns (bool)"
 ]

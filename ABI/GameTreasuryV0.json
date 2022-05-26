@@ -1,0 +1,16 @@
+[
+  "constructor(address)",
+  "event RoleAccepted(uint8 indexed,address indexed,address indexed)",
+  "event RoleProposed(uint8 indexed,address indexed,address indexed)",
+  "function acceptAuthority(uint8)",
+  "function buybackTax(uint256) payable returns (bool)",
+  "function gameTreasuryV0Balance() view returns (uint256)",
+  "function migrateToNewVersion() returns (bool)",
+  "function numberOfRoles() view returns (uint8)",
+  "function proposeAuthority(uint8,address)",
+  "function renounceAuthority(uint8)",
+  "function roles(uint8) view returns (address, address, bool)",
+  "function setV1ContractAddress(address)",
+  "function transferEthToNewVersion()",
+  "function v1Contract() view returns (address)"
+]
