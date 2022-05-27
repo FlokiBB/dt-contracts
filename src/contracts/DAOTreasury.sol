@@ -66,7 +66,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuthUpgradable, IDAOTreasury {
 
         uint8[] memory authorizedActors = new uint8[](1);
         authorizedActors[0] = DAO_ROLE_ID;
-        
+
         uint8 countOfContractRole = 1;
         init(countOfContractRole, authorizedAddresses, authorizedActors);
 

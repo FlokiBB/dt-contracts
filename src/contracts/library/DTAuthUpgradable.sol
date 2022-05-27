@@ -37,7 +37,11 @@ abstract contract DTAuthUpgradable {
      * @param addresses - the addresses of the roles.
      * @param roleIds - the ids of the roles.
      */
-    function init(uint8 _numberOfRoles, address[] memory addresses, uint8[] memory roleIds) internal {
+    function init(
+        uint8 _numberOfRoles,
+        address[] memory addresses,
+        uint8[] memory roleIds
+    ) internal {
         numberOfRoles = _numberOfRoles;
         require(addresses.length == roleIds.length, 'the number of addresses and the role ids must be equal');
         require(addresses.length == numberOfRoles, 'reach to max number of authorities');
