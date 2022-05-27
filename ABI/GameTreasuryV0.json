@@ -2,6 +2,7 @@
   "constructor(address)",
   "event RoleAccepted(uint8 indexed,address indexed,address indexed)",
   "event RoleProposed(uint8 indexed,address indexed,address indexed)",
+  "function DAO_ROLE_ID() view returns (uint8)",
   "function acceptAuthority(uint8)",
   "function buybackTax(uint256) payable returns (bool)",
   "function gameTreasuryV0Balance() view returns (uint256)",

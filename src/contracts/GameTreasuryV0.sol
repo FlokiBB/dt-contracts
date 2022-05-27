@@ -10,7 +10,7 @@ contract GameTreasuryV0 is DTAuth(1), IGameTreasury {
     bool private active = true;
     address public v1Contract;
 
-    uint8 private constant DAO_ROLE_ID = 0;
+    uint8 public constant DAO_ROLE_ID = 0;
 
     modifier isActive() {
         require(active, 'GameTreasuryV0 is not active');

@@ -6,6 +6,7 @@
   "event RoleAccepted(uint8 indexed,address indexed,address indexed)",
   "event RoleProposed(uint8 indexed,address indexed,address indexed)",
   "event Upgraded(address indexed)",
+  "function DAO_ROLE_ID() view returns (uint8)",
   "function START_TIME() view returns (uint256)",
   "function acceptAuthority(uint8)",
   "function acceptDaoFundRequestProposal(string)",

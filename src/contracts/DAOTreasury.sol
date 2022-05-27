@@ -4,15 +4,15 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
-import './library/DTAuth.sol';
+import './library/DTAuthUpgradable.sol';
 import './interfaces/ICollectiGame.sol';
 import './interfaces/IDAOTreasury.sol';
 import './interfaces/IGameTreasury.sol';
 
 // Note: add pauseable contract
-contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
-    uint256 public immutable START_TIME = block.timestamp;
-    uint8 private constant DAO_ROLE_ID = 0;
+contract DAOTreasury is UUPSUpgradeable, DTAuthUpgradable, IDAOTreasury {
+    uint256 public START_TIME;
+    uint8 public DAO_ROLE_ID;
 
     address public collectigame;
     address public gameTreasury;
@@ -21,7 +21,7 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
     uint256 public buybackTaxRation;
     uint256 public collectigameSupply;
     uint256 public daoProposalFundingStartTime;
-    bool private isSetup = false;
+    bool private isSetup;
 
     mapping(uint8 => Release) public ethReleasesPlan;
     mapping(uint8 => string) public ethReleasesPlanDescription;
@@ -57,13 +57,18 @@ contract DAOTreasury is UUPSUpgradeable, DTAuth(1), IDAOTreasury {
         address teamMultisig_,
         uint256 buybackTaxRation_
     ) public initializer {
+        DAO_ROLE_ID = 0;
+        START_TIME = block.timestamp;
+        isSetup = false;
+
         address[] memory authorizedAddresses = new address[](1);
         authorizedAddresses[0] = daoMultisig_;
 
         uint8[] memory authorizedActors = new uint8[](1);
         authorizedActors[0] = DAO_ROLE_ID;
-
-        init(authorizedAddresses, authorizedActors);
+        
+        uint8 countOfContractRole = 1;
+        init(countOfContractRole, authorizedAddresses, authorizedActors);
 
         collectigame = collectigame_;
         gameTreasury = gameTreasury_;

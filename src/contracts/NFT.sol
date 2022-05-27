@@ -47,16 +47,16 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
     ContractAddresses private addresses;
     ContractIPFS private ipfs;
 
-    uint256 public constant override MINT_PRICE_IN_WEI = 0.05 * 10**18;
+    uint256 public constant override MINT_PRICE_IN_WEI = 0.07 * 10**18;
     uint16 public constant MAX_MINT_PER_ADDRESS = 3;
     uint256 public immutable AUCTION_START_TIME; // epoch time
-    uint8 public constant override NUMBER_OF_TOKEN_FOR_AUCTION = 3;
+    uint8 public constant override NUMBER_OF_TOKEN_FOR_AUCTION = 10;
     uint256 public constant AUCTION_DURATION = 86400; // in seconds
     uint8 public constant ROYALTY_FEE_PERCENT = 10;
     uint256 public constant AUCTION_DROP_INTERVAL = 600; // in seconds
     uint8 private constant NUMBER_OF_ACTOR = 2;
-    uint8 private constant PLATFORM_MULTISIG_ROLE_ID = 0;
-    uint8 private constant DECENTRAL_TITAN_ROLE_ID = 1;
+    uint8 public constant PLATFORM_MULTISIG_ROLE_ID = 0;
+    uint8 public constant DECENTRAL_TITAN_ROLE_ID = 1;
 
     RoyaltyInfo private _royalties;
 
