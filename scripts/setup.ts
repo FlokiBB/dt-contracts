@@ -5,14 +5,14 @@ import { NFT, DAOTreasury, GameTreasuryV0 } from '../src/types';
 
 let DAOMultisigAddress: SignerWithAddress;
 let DecentralTitan: SignerWithAddress;
-let CollectiGameOwner: SignerWithAddress; 
-let WhiteListVerifier: SignerWithAddress; 
+let CollectiGameOwner: SignerWithAddress;
+let WhiteListVerifier: SignerWithAddress;
 let NFTContract: NFT;
 let DAOTreasuryContract: DAOTreasury;
 let GameTreasuryV0Contract: GameTreasuryV0;
 
 
-async function deployCollectiGame(){
+async function deployCollectiGame() {
     const godCID_ = 'ipfs://QmXDwhDEc1seGdaCSccrUMfPBwTx2TL22yTxNxd1UoSXVs';
     const notRevealedArtCID_ = 'ipfs://QmeEHxgXssbcN9bvYszFrHSw5YBYAtKxrA1ypzAzzFENB9';
     const afterRevealArtCID_ = 'ipfs://QmNMgz4h3NHWdy5fFGCZRgxEJzxMVKWRp3ykSsbhDRK5RE';
@@ -31,10 +31,10 @@ async function deployCollectiGame(){
     )) as NFT;
 
     await NFTContract.deployed();
-    console.log(`NFT Contract deployed at ${NFTContract.address}`);
+    console.log("NFT Contract deployed to:", NFTContract.address);
 }
 
-async function deployGameTreasury(){
+async function deployGameTreasury() {
     const GameTreasuryV0 = await ethers.getContractFactory("GameTreasuryV0");
     GameTreasuryV0Contract = (await GameTreasuryV0.deploy(
         DAOMultisigAddress.address
@@ -44,7 +44,7 @@ async function deployGameTreasury(){
 
 }
 
-async function deployDaoTreasury(){
+async function deployDaoTreasury() {
     const DAOTreasury = await ethers.getContractFactory("DAOTreasury");
     const buybackTaxRation = 10;
 
@@ -56,19 +56,74 @@ async function deployDaoTreasury(){
         buybackTaxRation
     ])) as DAOTreasury; // initializer should be added in this line
     await DAOTreasuryContract.deployed();
-    console.log("Box deployed to:", DAOTreasuryContract.address);
+    console.log("DaoTreasury:", DAOTreasuryContract.address);
 }
 
-async function callCollectiGameInitializer(){
+async function callCollectiGameInitializer() {
+    // auction formula => AUCTION_DROP_PER_STEP: (START_PRICE - END_PRICE)/ (1 day in seconds(86400)) * (AUCTION_DROP_INTERVAL in seconds)
+    const auctionConfig = [
+        {
+            startPrice: ethers.utils.parseEther('50'),
+            endPrice: ethers.utils.parseEther('5'),
+            auctionDropPerStep: ethers.utils.parseEther('0.3125'),
+        }, {
+            startPrice: ethers.utils.parseEther('5'),
+            endPrice: ethers.utils.parseEther('2'),
+            auctionDropPerStep: ethers.utils.parseEther('0.02083333'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }, {
+            startPrice: ethers.utils.parseEther('10'),
+            endPrice: ethers.utils.parseEther('1'),
+            auctionDropPerStep: ethers.utils.parseEther('0.0625'),
+        }];
+
+    await NFTContract.connect(DAOMultisigAddress).initializer(
+        auctionConfig,
+        DAOTreasuryContract.address,
+        GameTreasuryV0Contract.address,
+        WhiteListVerifier.address
+    );
+
+
 
 }
-async function activateWhiteListMinting(){
-
+async function activateWhiteListMinting() {
+    await NFTContract.connect(DAOMultisigAddress).startWhiteListMinting()
 }
-async function activatePublicMinting(){
-
+async function activatePublicMinting() {
+    await NFTContract.connect(DAOMultisigAddress).startPublicMinting()
 }
 
+async function setupReleasePlane() {
+    await DAOTreasuryContract.connect(DAOMultisigAddress).setupReleasePlan();
+}
 async function main() {
     const accounts = await ethers.getSigners();
     DAOMultisigAddress = accounts[0]; // same with platform multisig address
