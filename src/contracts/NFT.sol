@@ -277,7 +277,9 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
             _safeMint(msg.sender, quantity);
         }
         if (msg.value > 0) {
-            bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).mintPriceDeposit{value: msg.value}(msg.value);
+            bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).mintPriceDeposit{value: msg.value}(
+                msg.value
+            );
             require(depositStatus, 'eth transfer failed');
         }
     }
@@ -434,7 +436,9 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
     function transferEthToDao() external payable whileMintingDone {
         uint256 contractBalance = address(this).balance;
         require(contractBalance > 0, 'Contract Balance is Zero');
-        bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).generalDeposit{value: contractBalance}(contractBalance);
+        bool depositStatus = IDAOTreasury(addresses.daoTreasuryContract).generalDeposit{value: contractBalance}(
+            contractBalance
+        );
         require(depositStatus, 'eth transfer failed');
     }
 }
