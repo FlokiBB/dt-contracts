@@ -33,10 +33,10 @@ async function deployCollectiGame() {
     await NFTContract.deployed();
     console.log("NFT Contract deployed to:", NFTContract.address);
 
-    // await ethernal.push({
-    //     name: 'NFT',
-    //     address: NFTContract.address,
-    // })
+    await ethernal.push({
+        name: 'NFT',
+        address: NFTContract.address,
+    })
 }
 
 async function deployGameTreasury() {
@@ -47,10 +47,10 @@ async function deployGameTreasury() {
     await GameTreasuryV0Contract.deployed();
     console.log("GameTreasuryV0 deployed to:", GameTreasuryV0Contract.address);
     
-    // await ethernal.push({
-    //     name: 'GameTreasuryV0',
-    //     address: GameTreasuryV0Contract.address,
-    // })
+    await ethernal.push({
+        name: 'GameTreasuryV0',
+        address: GameTreasuryV0Contract.address,
+    })
 }
 
 async function deployDaoTreasury() {
@@ -67,10 +67,10 @@ async function deployDaoTreasury() {
     await DAOTreasuryContract.deployed();
     console.log("DaoTreasury:", DAOTreasuryContract.address);
 
-    // await ethernal.push({
-    //     name: 'DAOTreasury',
-    //     address: DAOTreasuryContract.address,
-    // })
+    await ethernal.push({
+        name: 'DAOTreasury',
+        address: DAOTreasuryContract.address,
+    })
 }
 
 async function callCollectiGameInitializer() {
