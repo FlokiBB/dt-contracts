@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers, upgrades } from "hardhat";
+import { ethers, upgrades, ethernal } from "hardhat";
 import { NFT, DAOTreasury, GameTreasuryV0 } from '../src/types';
 
 
@@ -32,6 +32,11 @@ async function deployCollectiGame() {
 
     await NFTContract.deployed();
     console.log("NFT Contract deployed to:", NFTContract.address);
+
+    // await ethernal.push({
+    //     name: 'NFT',
+    //     address: NFTContract.address,
+    // })
 }
 
 async function deployGameTreasury() {
@@ -41,7 +46,11 @@ async function deployGameTreasury() {
     )) as GameTreasuryV0;
     await GameTreasuryV0Contract.deployed();
     console.log("GameTreasuryV0 deployed to:", GameTreasuryV0Contract.address);
-
+    
+    // await ethernal.push({
+    //     name: 'GameTreasuryV0',
+    //     address: GameTreasuryV0Contract.address,
+    // })
 }
 
 async function deployDaoTreasury() {
@@ -57,6 +66,11 @@ async function deployDaoTreasury() {
     ])) as DAOTreasury; // initializer should be added in this line
     await DAOTreasuryContract.deployed();
     console.log("DaoTreasury:", DAOTreasuryContract.address);
+
+    // await ethernal.push({
+    //     name: 'DAOTreasury',
+    //     address: DAOTreasuryContract.address,
+    // })
 }
 
 async function callCollectiGameInitializer() {
@@ -138,6 +152,7 @@ async function main() {
     await callCollectiGameInitializer();
     await activateWhiteListMinting();
     await activatePublicMinting();
+    await setupReleasePlane();
 }
 
 main();

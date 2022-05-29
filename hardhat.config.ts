@@ -10,7 +10,7 @@ import 'solidity-coverage'
 import 'hardhat-abi-exporter'
 import 'solidity-coverage'
 import '@openzeppelin/hardhat-upgrades'
-
+import 'hardhat-ethernal'
 
 dotenv.config()
 
@@ -70,6 +70,16 @@ const config: HardhatUserConfig = {
     outDir: 'src/types',
     target: 'ethers-v5',
   },
+  // ethernal: {
+  //   email: process.env.ETHERNAL_EMAIL,
+  //   password: process.env.ETHERNAL_PASSWORD,
+  //   disableSync: false, // If set to true, plugin will not sync blocks & txs
+  //   disableTrace: false, // If set to true, plugin won't trace transaction
+  //   workspace: undefined, // Set the workspace to use, will default to the default workspace (latest one used in the dashboard). It is also possible to set it through the ETHERNAL_WORKSPACE env variable
+  //   uploadAst: false, // If set to true, plugin will upload AST, and you'll be able to use the storage feature (longer sync time though)
+  //   disabled: false, // If set to true, the plugin will be disabled, nohting will be synced, ethernal.push won't do anything either
+  //   resetOnStart: "local hardhat"
+  // }
 }
 
 export default config

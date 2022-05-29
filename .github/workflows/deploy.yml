@@ -1,0 +1,25 @@
+name: deploy to remote hardhat node 
+
+on:
+  push:
+    branches:
+      - frontend-integration
+
+jobs: 
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "command"
+        uses: fifsky/ssh-action@master
+        with:
+          command: |
+            cd /root/dt-contracts
+            git pull origin frontend-integration
+            yarn install
+            npx hardhat node &>/dev/null & 
+            npx hardhat run ./scripts/setup.ts --network localhost  
+            
+          host: ${{ secrets.STAGE_SSH_ACTION_HOST }}
+          user: ${{ secrets.STAGE_SSH_ACTION_USER }}
+          key: ${{ secrets.STAGE_SSH_ACTION_KEY }}
+          port: ${{ secrets.STAGE_SSH_ACTION_PORT }}
