@@ -21,7 +21,7 @@ slither src/contracts/example_merged.sol
 for local test with HardHat
 
 ```
-npx hardhat run scripts/deploy.ts --network localhost
+npx hardhat run scripts/setup.ts --network localhost
 npx hardhat console --network localhost
 
 const SampleContract = await ethers.getContractFactory('SampleContract');

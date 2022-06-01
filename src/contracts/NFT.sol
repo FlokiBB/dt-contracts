@@ -109,10 +109,10 @@ contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IE
         string memory godCID_,
         string memory _notRevealedArtCID,
         uint256 _upgradeRequestFeeInWei,
-        address owner,
+        address _owner,
         address platformMultisig,
         address decentralTitan
-    ) DTERC721A('DemmortalTreasure', 'DT') DTOwnable(owner) DTAuth(NUMBER_OF_ACTOR) {
+    ) DTERC721A('DemmortalTreasure', 'DT') DTOwnable(_owner) DTAuth(NUMBER_OF_ACTOR) {
         state = ContractState(false, false, false, false, false, false);
 
         address[] memory authorizedAddresses = new address[](2);
