@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { NFT, DAOTreasury, GameTreasuryV0 } from '../../types';
+import { CollectigameNFT, DAOTreasury, GameTreasuryV0 } from '../../types';
 import { BigNumber } from "@ethersproject/bignumber";
 
 export interface auctionConfig {
@@ -18,7 +18,7 @@ export interface SetupOutput {
     };
 
     deployedContracts: {
-        NFTContract: NFT;
+        NFTContract: CollectigameNFT;
         DAOTreasuryContract: DAOTreasury;
         GameTreasuryV0Contract: GameTreasuryV0;
     };
