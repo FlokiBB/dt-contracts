@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers, upgrades } from "hardhat";
-import { NFT, DAOTreasury, GameTreasuryV0 } from '../../types';
+import { CollectigameNFT, DAOTreasury, GameTreasuryV0 } from '../../types';
 import {SetupOutput, auctionConfig} from './types'
 import { BigNumber } from "@ethersproject/bignumber";
 
@@ -9,7 +9,7 @@ let DAOMultisigAddress: SignerWithAddress;
 let DecentralTitan: SignerWithAddress;
 let CollectiGameOwner: SignerWithAddress;
 let WhiteListVerifier: SignerWithAddress;
-let NFTContract: NFT;
+let NFTContract: CollectigameNFT;
 let DAOTreasuryContract: DAOTreasury;
 let GameTreasuryV0Contract: GameTreasuryV0;
 let auctionConfig: auctionConfig[];
@@ -26,7 +26,7 @@ async function deployCollectiGame() {
     afterRevealArtCID_ = 'ipfs://QmNMgz4h3NHWdy5fFGCZRgxEJzxMVKWRp3ykSsbhDRK5RE';
     upgradeRequestFeeInWei_ = ethers.utils.parseEther('0.01');
 
-    const Contract = await ethers.getContractFactory("NFT");
+    const Contract = await ethers.getContractFactory("CollectigameNFT");
     Contract.connect(CollectiGameOwner).deploy
 
     NFTContract = (await Contract.connect(CollectiGameOwner).deploy(
@@ -36,7 +36,7 @@ async function deployCollectiGame() {
         CollectiGameOwner.address,
         DAOMultisigAddress.address,
         DecentralTitan.address,
-    )) as NFT;
+    )) as CollectigameNFT;
 
     await NFTContract.deployed();
     const blockNum = await ethers.provider.getBlockNumber();

@@ -15,7 +15,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 // add test for setOwnersExplicit
 // add test for transferFrom and approve
-contract NFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
+contract CollectigameNFT is DTERC721A, ICollectiGame, DTOwnable, DTAuth, ReentrancyGuard, IERC2981Royalties {
     using ECDSA for bytes32;
 
     // *******************************************************************************
